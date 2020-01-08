@@ -9,7 +9,7 @@ related to the choices we are going to make along the development.
 1 - Getting the system to execute our code as the first thing after
 the firmware.
 
-We have chosen an x86 system (a.k.a. PC) to be the target architecture
+We have chosen the x86/i386 (a.k.a. PC) to be the target architecture
 of the kernel. x86 systems start by executing the firmware located at the
 main board (we are considering the execution of the BIOS and not
 EFI/UEFI). As the last step, the firmware tries to load the first
