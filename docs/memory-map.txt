@@ -1,0 +1,29 @@
+Every x86 CPU boots in real-mode. The memory map for real mode is as follows:
+
+
++----+-------------------------+----------------------------------------------------------------+
+| ID |      MEMORY RANGE       |  DESCRIPTION                                                   |
++----+-------------------------+----------------------------------------------------------------+
+| 01 | 0x00000000 - 0x000003FF | IVT (Interrupt Vector Table) in Real Mode                      |
+| 02 | 0x00000400 - 0x000004FF | BIOS Data Area                                                 |
+| 03 | 0x00000500 - 0x00007BFF | Unused                                                         |
+| 04 | 0x00007C00 - 0x00007DFF | Content read from MBR (it's going to be used by our bootloader)|
+| 05 | 0x00007E00 - 0x0009FFFF | Unused                                                         |
+| 06 | 0x000A0000 - 0x000BFFFF | Video RAM (VRAM) Memory                                        |
+| 07 | 0x000B0000 - 0x000B7777 | Monochrome Video Memory                                        |
+| 08 | 0x000B8000 - 0x000BFFFF | Color Video Memory                                             |
+| 09 | 0x000C0000 - 0x000C7FFF | Video ROM BIOS                                                 |
+| 10 | 0x000C8000 - 0x000EFFFF | BIOS Shadow Area                                               |
+| 11 | 0x000F0000 - 0x000FFFFF | System BIOS                                                    |
++----+-------------------------+----------------------------------------------------------------+
+
+The most important regions for our kernel are:
+
+    01 - We will host our IVT here (yeah, that's right. We'll overwrite BIOS IVT.. There is
+         no turning back...
+
+    05 - Our kernel will start at address 0x10000 (64K). It will fit there,
+         between 0x10000 and 0x9FFFF, more than enough space :)
+
+    06 - Even after switching the CPU to protected mode, this region will be used to send
+         messages to the screen.

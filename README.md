@@ -1,6 +1,6 @@
-# akfs
-A Kernel From Scratch
+# KALIMERA - akfs
 
+Kalimera - A(nother) Kernel From Scratch
 
 Yes, this is another operating system kernel written from scratch. There are tons of the same out there.
 
@@ -8,4 +8,5 @@ So far, the planned features/architecture are: x86 (32 bits), protected-mode, ri
 
 It should be small and simple enough to enable anyone to grasp the workings of the entire kernel. Yep, you've just read it. It will be written in AT&T assembly language syntax and C.
 
-PLEASE VISIT https://gitlab.com/rossanx/akfs FOR UPDATES.
+
+Please, read the file docs/journal.md.
