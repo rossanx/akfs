@@ -63,7 +63,7 @@ kernel is loaded into memory we don't need the disk anymore.
 
 We could use LILO, GRUB or any other bootloader to boot our kernel. So
 why are we having the trouble to create our own? Well, why are we
-having the trouble to create our very own kernel? We could we Linux or
+having the trouble to create our very own kernel? We could use Linux or
 any other kernel. We don't need kalimera - akfs (a(nother) kernel from
 scratch). I hope you've got the point... We are creating the
 bootloader 'cause we can :)) The objective is to create as much as we
@@ -152,15 +152,15 @@ following code:
 
     mov $0x10, %eax
 
-On the other hand, in Intel format you reverse source and destinatios like this:
+On the other hand, in Intel format you reverse source and destination like this:
 "opcode destination source", and the same example would be written like this:
-"mov, %eax, $0x10". The assembler I use to assemble the code is GAS
+"mov %eax, $0x10". The assembler I use to assemble the code is GAS
 (GNU Assembler).
 
 Ok, so let's get started. Our kernel is supposed to run in 32 bits protected
 mode. In real-mode, things are a little bit easier, as you don't need some of
 the structures present in protected-mode. In real-mode, the position of the
-interrupt vector table (IVT) is fixed at the very begining of memmory. On the
+interrupt vector table (IVT) is fixed at the very beginning of memory. On the
 other hand, in protected-mode the IVT can be placed anywhere in memory. To
 inform where the IVT is you should create a table called IDT (Interrupt
 Descriptor Table). In protected-mode you can configure areas of the memory to
@@ -248,7 +248,7 @@ The monitor shows 16 1-byte chuncks of memory starting at position
      0000000000007c00: 0x10 0x00 0x7a 0x00 0x00 0x00 0xf0 0x07
      0000000000007c08: 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00
 
-If you want to inspect memory showing 2-byte chunks of memory, you
+If you want to inspect memory showing 4-byte chunks of memory, you
 would type this: (qemu) x /16w 0x7C00
 
      0000000000007c00: 0x007a0010 0x07f00000 0x00000001 0x00000000
