@@ -10,8 +10,8 @@ OUTPUT_FORMAT(binary);
 
 SECTIONS
 {	
-	/*. = 0x10000;*/
-	. = 0x7f00;
+	/* . = 0x10000; */
+	 . = 0x8000;
 	.text : { *(.text) }
         .data : { *(.data) }
 	.bss  : { *(.bss)  }
