@@ -38,7 +38,7 @@ GITHUB and want to see this graph, check this same project at GITLAB):
 
 ```mermaid
 graph LR;
-firmware -- LOADS/JUMP TO --> id1["bootloader at 0x7C00"] -- LOADS/JUMP TO --> id2["kernel at 0x10000"];
+firmware -- LOADS/<br/>JUMP TO --> id1["bootloader<br/>at 0x7C00"] -- LOADS/<br/>JUMP TO --> id2["kernel at<br/>0x10000"];
 ```
 
 Ok, you know the theory. Now we must provide some code to be loaded by
@@ -531,4 +531,17 @@ this at the (qemu) prompt: (qemu) x /432h 0x7C00
      0000000000007f40: 0x4f4f 0x4c54 0x414f 0x4544 0x2052 0x4f57 0x4b52 0x4445
      0000000000007f50: 0x202e 0x6159 0x2179 0x0a21 0x000d 0x0000 0x0000 0x0000
 
+=======================================================================
 
+Appendix E. Source Code - Number of lines prediction based on another
+            kernel I developed
+
+
+```mermaid
+pie title Source Code Distribution Prediction (lines)
+    "x86-Assembly" :  9502
+    "C" :  8566
+    "Shel Script" :  66
+    "Makefile/linker script" :  9
+    "Documentation" :  508
+```

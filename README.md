@@ -8,5 +8,12 @@ So far, the planned features/architecture are: x86 (32 bits), protected-mode, ri
 
 It should be small and simple enough to enable anyone to grasp the workings of the entire kernel. Yep, you've just read it. It will be written in AT&T assembly language syntax and C.
 
+```mermaid
+pie title Source Code Distribution so far (lines)
+    "x86-Assembly" :  3448
+    "Shel Script" :  154
+    "Makefile/linker script" :  540
+    "Documentation" :  1214
+```
 
 Please, read the file [docs/journal.md](docs/journal.md).
