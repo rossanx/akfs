@@ -31,8 +31,16 @@ available 510 bytes" as if we had a huge space :)) ). The firmware
 copies this sector to memory position 0x7C00 and checks if the values
 0xAA and 0x55 are present at positions 0x7DFF and 0x7E00. If true, the
 firmware instructs the CPU to jump to 0x7C00. Now we are in control of
-the system, yey!!! Now we must provide some code to be loaded by the
-firmware. Considering we have a machine (real or virtual - qemu or
+the system, yey!!! We intend to put our kernel in an area that starts at
+0x10000 (64k). In short, the boot sequence is:
+
+```mermaid
+graph LR;
+firmware -- LOADS/JUMP TO --> id1["bootloader at 0x7C00"] -- LOADS/JUMP TO --> id2["kernel at 0x10000"];
+```
+
+Ok, you know the theory. Now we must provide some code to be loaded by
+the firmware. Considering we have a machine (real or virtual - qemu or
 virtualbox) that has a hard disk, we must provide a code that fits in
 512 bytes (actually 510).
 
