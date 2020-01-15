@@ -533,7 +533,7 @@ this at the (qemu) prompt: (qemu) x /432h 0x7C00
 
 =======================================================================
 
-Appendix E. Source Code - Number of lines prediction based on another
+Appendix F. Source Code - Number of lines prediction based on another
             kernel I developed
 
 
