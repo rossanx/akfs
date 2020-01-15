@@ -31,8 +31,10 @@ available 510 bytes" as if we had a huge space :)) ). The firmware
 copies this sector to memory position 0x7C00 and checks if the values
 0xAA and 0x55 are present at positions 0x7DFF and 0x7E00. If true, the
 firmware instructs the CPU to jump to 0x7C00. Now we are in control of
-the system, yey!!! We intend to put our kernel in an area that starts at
-0x10000 (64k). In short, the boot sequence is:
+the system, yey!!! We intend to put our kernel in an area that starts
+at 0x10000 (64k). In short, the boot sequence is (This only renders on
+GITLAB because it uses mermaid MD. So, if you are reading this from
+GITHUB and want to see this graph, check this same project at GITLAB):
 
 ```mermaid
 graph LR;
