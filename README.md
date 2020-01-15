@@ -9,4 +9,4 @@ So far, the planned features/architecture are: x86 (32 bits), protected-mode, ri
 It should be small and simple enough to enable anyone to grasp the workings of the entire kernel. Yep, you've just read it. It will be written in AT&T assembly language syntax and C.
 
 
-Please, read the file docs/journal.md.
+Please, read the file [docs/journal.md](docs/journal.md).
