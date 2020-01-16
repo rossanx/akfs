@@ -156,7 +156,9 @@ what's going on.
 
 Next, follow these steps to make the bootloader run fakekernel.s:
 
-            A - Open FILE linker-script and change 0x10000 to 0x8000
+            A - cd src/bootloader
+	    
+	        Open FILE linker-script and change 0x10000 to 0x8000
                 (we are informing the linker that our code starts at
                 memory address 0x8000. This will translate all
                 addresses used by the code accordingly - we are not
@@ -188,17 +190,17 @@ Next, follow these steps to make the bootloader run fakekernel.s:
 
              So, just go to the directory src/bootloader and type:
 
-                make clean; make ; make test; make run
+                make clean; make test
 
 =======================================================================
 
-3 - Kernel main file (src/kernel/kernel.s - TO BE UPLOADED YET)
+3 - Kernel main file (src/kernel/kalimera.s - TO BE UPLOADED YET)
 +-- Timestamp: 2020-01-07-13:20 ---+
 
 The idea is to create the bare bones functionality in one file, and
 from that file call other functions present in other files. The source
 code of this first file is written in x86 assembly language. I prefer
-using the AT&T format.  In this format, the structure of the mnemonic
+using the AT&T format. In this format, the structure of the mnemonic
 is:
 
     opcode source destination
@@ -255,7 +257,7 @@ following steps:
            addr32 lidtl	idt_ptr
 
          Here, gdt_ptr and idt_ptr are the structures holding the information
-	 described in B and C.
+	 described at B and C.
      E - Set the first bit in the CR0 register to 1. This informs the CPU it is
          in the process of switching to protected-mode. This bit is called PE.
      F - Execute a FAR JUMP instruction landing in 32 bit code. To do that
@@ -265,11 +267,14 @@ following steps:
              .long	setDATA         # 1st OPCODE PARAM - JUMPS TO setData
              .word	0x8             # 2nd OPCODE PARAM - GDT ENTRY
 
-         Sometimes it's not possible to use a mnemonic to execute the
-	 instruction you want to execute. The FAR JUMP from 16bit code
-	 to 32bit code is one example where the assembler I'm using had
-	 problems to generate the correct OPCODE. The mnemonic would be
-	 something like this:
+         This code tells the CPU to JUMP to memory location
+	 represented by the "variable" setDATA. But what the frak! Why
+	 are we using opcodes instead of mnemonics? Sometimes it's not
+	 possible to use a mnemonic to execute the instruction you
+	 want to execute. The FAR JUMP from 16bit code to 32bit code
+	 is one example where the assembler I'm using had problems to
+	 generate the correct OPCODE. The mnemonic would be something
+	 like this:
 
               ljmp target_address, gdt_entry
 
@@ -282,7 +287,6 @@ following steps:
 As you could see it's not as easy as we present it to students when
 teaching Operating Systems. Well, you use any abstraction that suits
 the audience.
-
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.
@@ -337,6 +341,7 @@ Appendix B. Exploring qemu REGISTERS !!!!
 
 This is amazing. You should definitely explore this.
 Type: (qemu) info registers
+
 You end up with:
 
      EAX=00000000 EBX=0000dc80 ECX=0000b60a EDX=00000000

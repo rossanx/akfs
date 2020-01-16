@@ -8,14 +8,13 @@
 
 OUTPUTDIR=../../bin
 
-all: ${OUTPUTDIR}/bootloader.o ${OUTPUTDIR}/bootloader.bin ${OUTPUTDIR}/bootloader.map
-
-${OUTPUTDIR}/bootloader.bin ${OUTPUTDIR}/bootloader.map: ${OUTPUTDIR}/bootloader.o
-	ld -m elf_i386 -M -Map=${OUTPUTDIR}/bootloader.map -Ttext 0x7c00 --oformat=binary ${OUTPUTDIR}/bootloader.o -o ${OUTPUTDIR}/bootloader.bin
+all: ${OUTPUTDIR}/bootloader.o ${OUTPUTDIR}/bootloader.bin
 
 ${OUTPUTDIR}/bootloader.o: bootloader.s
 	as -32 bootloader.s -o ${OUTPUTDIR}/bootloader.o
 
+${OUTPUTDIR}/bootloader.bin: ${OUTPUTDIR}/bootloader.o
+	ld -m elf_i386 -M -Map=${OUTPUTDIR}/bootloader.map -Ttext 0x7c00 --oformat=binary ${OUTPUTDIR}/bootloader.o -o ${OUTPUTDIR}/bootloader.bin
 
 clean:
 	rm -f ${OUTPUTDIR}/bootloader.o
@@ -30,16 +29,21 @@ clean:
 	ls ${OUTPUTDIR}
 
 ## UTILS
-test: ${OUTPUTDIR}/fakekernel.o ${OUTPUTDIR}/fakekernel.bin ${OUTPUTDIR}/fakekernel.map
+test: ${OUTPUTDIR}/hd-fakekernel.img
+	cp run-bootloader-test.sh ${OUTPUTDIR}/run-bootloader-test.sh
+	chmod 755 ${OUTPUTDIR}/run-bootloader-test.sh
+	cd ${OUTPUTDIR}; ./run-bootloader-test.sh; cd -
 
-${OUTPUTDIR}/fakekernel.o ${OUTPUTDIR}/fakekernel.bin ${OUTPUTDIR}/fakekernel.map:
-	as -32 --gstabs+ fakekernel.s -o ${OUTPUTDIR}/fakekernel.o
-	ld -x -s -m elf_i386 -Map=${OUTPUTDIR}/fakekernel.map -Tlinker-script ${OUTPUTDIR}/fakekernel.o -o ${OUTPUTDIR}/fakekernel.bin
+${OUTPUTDIR}/hd-fakekernel.img: ${OUTPUTDIR}/fakekernel.bin ${OUTPUTDIR}/bootloader.bin
 	dd if=/dev/zero of=${OUTPUTDIR}/hd-fakekernel.img bs=1024 count=10000
 	dd if=${OUTPUTDIR}/bootloader.bin of=${OUTPUTDIR}/hd-fakekernel.img bs=1 conv=notrunc
 	dd if=${OUTPUTDIR}/fakekernel.bin of=${OUTPUTDIR}/hd-fakekernel.img bs=1 conv=notrunc seek=512
-	cp run-bootloader-test.sh ${OUTPUTDIR}/run-bootloader-test.sh
-	chmod 755 ${OUTPUTDIR}/run-bootloader-test.sh
 
-run:
-	cd ${OUTPUTDIR}; ./run-bootloader-test.sh; cd -
+
+${OUTPUTDIR}/fakekernel.bin: ${OUTPUTDIR}/fakekernel.o
+	ld -x -s -m elf_i386 -Map=${OUTPUTDIR}/fakekernel.map -Tlinker-script ${OUTPUTDIR}/fakekernel.o -o ${OUTPUTDIR}/fakekernel.bin
+
+
+${OUTPUTDIR}/fakekernel.o: fakekernel.s
+	as -32 --gstabs+ fakekernel.s -o ${OUTPUTDIR}/fakekernel.o
+

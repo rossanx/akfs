@@ -8,20 +8,18 @@
 
 
 all:
-	(cd src/bootloader; make all)
-	#(cd src/kernel; make all)
+	(cd src/bootloader; make all; cd -)
+	(cd src/kernel; make all; cd -)
 
 run:
-	#(cd bin; make run)
+	(cd src/kernel; make run; cd -)
 
 clean:
-	(cd src/bootloader; make clean)
-	#(cd src/kernel; make clean)
+	(cd src/bootloader; make clean; cd -)
+	(cd src/kernel; make clean; cd -)
 
 
 ## UTILS
 testbl:
-	(cd src/bootloader; make test)
+	(cd src/bootloader; make test; cd -)
 
-runbl:
-	(cd src/bootloader; make run)
