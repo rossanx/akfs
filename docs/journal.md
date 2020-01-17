@@ -333,17 +333,19 @@ I decided to make the GDT with the following entries:
 The bottom line is, both the CODE SEGMENT and the DATA SEGMENT are 4GB
 long, goes from 0x0 and 0xFFFFFFFF. Now let me break a GDT entry down.
 Entry 0x8 (CODE SEGMENT) will be put in memory like this:
+
+<pre>
                   Address                      Address
                     0x80F---+             +--- 0x808
                             |             |
                             v             v
-      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+      Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                        
 Now let's break it down:
 
    * SEGMENT LIMIT
                                .        ....
-      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+      Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                                |        ||||
                                |        vvvv
 			       +------>FFFFF This represents the limit of the
@@ -354,7 +356,7 @@ Now let's break it down:
 					     to "1".  2^20 equals 1M.
    * GRANULARITY
                               ..        ....
-      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+      Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                               |
                            +--+---+       
                            |      |
@@ -374,7 +376,7 @@ Now let's break it down:
 
    * BASE ADDRESS
                             ....  ..........   
-      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+      Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                             ||    ||||||
                             |+---+||||||
                             +---+|||||||
@@ -387,9 +389,9 @@ Now let's break it down:
             **************************************************************
 
 
-   * XXXXXXXXXXXXXXXXXXX
+   * SEGMENT TYPE (CODE / DATA)
                             ................   
-      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+      Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                                 ||
                        +--------++-------+
                     +--+--+           +--+--+
@@ -412,6 +414,7 @@ Now let's break it down:
             ****** SO THIS SEGMENT IS USED TO PUT INSTRUCTIONS AND *******
             ****** NOT DATA, AND IS TO BE USED BY THE CPU IN RING 0*******
             **************************************************************
+</pre>
 
 Phew!!!! That was a bunch of bits!!! I hope you could understand the
 break down.
@@ -420,7 +423,7 @@ I will save you from the explanation of the DATA SEGMENT, it's almost
 the same. Humm, not really. Let's dig in. They are really look alike,
 IN OUR KERNEL (it could be really different in another project). Take
 a look:
-
+<pre>
    CODE  0x00CF9A000000FFFF (We've just broke down this one)
    DATA  0x00CF92000000FFFF
                 |
@@ -432,7 +435,7 @@ a look:
                            ||+--> "1" READABLE/WRITABLE
                            |+---> WE ARE NOT USING IT
                            +----> DATA SEGMENT
-			   
+</pre>			   
 It states that it goes from memory address 0x0 to 0xFFFFFFFF (4GB of
 memory), it's a data segment, you can't execute code, it's readable
 and writable. That's it. Phew again !!!!
