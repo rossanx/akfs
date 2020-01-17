@@ -228,9 +228,9 @@ create a table that informs how the memory should be used and where
 that memory starts and ends. This table is called GDT (Global
 Descriptor Table). Any process that is created can have it's own GDT
 entry. In our case, we are going to create kernel threads to run our
-tasks - kalimera kernel will not run user-space code, i.e., CPU
-running in ring 3, at least for now. In doing so, every thread shares
-the same GDT entries.
+tasks (always switched to ring 0) - kalimera kernel will not run
+user-space code, i.e., CPU running in ring 3, at least for now. In
+doing so, every thread shares the same GDT entries.
 
 GDT is a complex beast where you can configure a bunch of things
 related to the segment you are trying to use and protect. We're
@@ -241,7 +241,19 @@ In order to run the x86 CPU in protected-mode you should execute the
 following steps:
 
      **** CODE IN 16 BITS WITH THE PROCESSOR IN REAL-MODE ****
-     
+
+     FIRST STEP: DISABLE INTERRUPTS. THIS IS IMPORTANT. IF YOU SWITCH
+                 TO PROTECTED-MODE WITHOUT DEFINING AN IVT, YOU WILL
+                 CRASH YOUR MACHINE. IF AN INTERRUPT IS RAISED AND YOU
+                 DONT'T HAVE AN INTERRUPT HANDLER FOR THAT, BEHAVIOR IS
+                 UNDEFINED. YOU COULD END UP EXECUTING WHATEVER GARBAGE
+                 THE PROCESSOR WOULD EVENTUALLY POINT TO!!!! SO:
+		 
+                     cli
+     NEXT:
+         ..some other stuff that you can check in the code... The important
+	 stuff:
+	 
      A - Create a GDT with at least 3 entries:
          -- Dummy entry (recommended by Intel)
          -- CODE SEGMENT entry
@@ -287,6 +299,149 @@ following steps:
 As you could see it's not as easy as we present it to students when
 teaching Operating Systems. Well, you use any abstraction that suits
 the audience.
+
+Now let's cut to the chase. Let's code this.
+
+   SEE FILE src/kernel/kalimera.s (TO BE UPLOADED)
+
+I decided to make the GDT with the following entries:
+
+	/* ENTRY 0x0 - RECOMMENDED BY INTEL (dummy) */
+        movw    $0x0000, 0x800
+        movw    $0x0000, 0x802
+        movw    $0x0000, 0x804
+        movw    $0x0000, 0x806
+
+        
+       /* ENTRY 0x8 - CODE SEGMENT */
+        movw    $0xFFFF, 0x808
+        movw    $0x0000, 0x80A
+        movb    $0x00,   0x80C
+        movb    $0x9A,   0x80D
+        movb    $0xCF,   0x80E
+        movb    $0x00,   0x80F
+
+
+        /* ENTRY 0x10 -  DATA SEGMENT */
+        movw    $0xFFFF, 0x810
+        movw    $0x0000, 0x812
+        movb    $0x00,   0x814
+        movb    $0x92,   0x815
+        movb    $0xCF,   0x816
+        movb    $0x00,   0x817
+
+The bottom line is, both the CODE SEGMENT and the DATA SEGMENT are 4GB
+long, goes from 0x0 and 0xFFFFFFFF. Now let me break a GDT entry down.
+Entry 0x8 (CODE SEGMENT) will be put in memory like this:
+                  Address                      Address
+                    0x80F---+             +--- 0x808
+                            |             |
+                            v             v
+      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+                       
+Now let's break it down:
+
+   * SEGMENT LIMIT
+                               .        ....
+      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+                               |        ||||
+                               |        vvvv
+			       +------>FFFFF This represents the limit of the
+			                     segment. I prefer thinking
+					     about it in terms o the number
+			                     of "pages" of this segment.
+					     This is a 20 bit number, all set
+					     to "1".  2^20 equals 1M.
+   * GRANULARITY
+                              ..        ....
+      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+                              |
+                           +--+---+       
+                           |      |
+       Bit representation:   1100
+	                     ||||
+                             |||+-> RESERVED
+                             ||+--> RESERVED			     
+                             |+---> "1" This is a 32bit segment (0 is a 16bit)
+                             +----> "1" Means "the page size" is 4k.
+	                             This a multiplication factor. But I prefer
+                                     thinking about it as the "page size"
+
+
+            **************************************************************
+            ****** So if you multiply 1M by 4K you end up with 4G. *******
+            **************************************************************
+
+   * BASE ADDRESS
+                            ....  ..........   
+      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+                            ||    ||||||
+                            |+---+||||||
+                            +---+|||||||
+                                ||||||||
+                                vvvvvvvv
+                                00000000 -> This represents the base address.
+
+            **************************************************************
+            ******  SO THIS SEGMENT STARTS AT MEMORY ADDRESS 0x0.  *******
+            **************************************************************
+
+
+   * XXXXXXXXXXXXXXXXXXX
+                            ................   
+      Higher addresses <- 0x00CF9A000000FFFF -> Lower Addresses
+                                ||
+                       +--------++-------+
+                    +--+--+           +--+--+
+                    |     |           |     |
+                     1001              1010
+		     ||||              |||+----> WE ARE NOT USING IT
+                     ||||              ||+-----> "1" READABLE/WRITABLE
+                     ||||              |+------> WE ARE NOT USING IT
+                     ||||              +-------> "1" CODE SEGMENT
+                     |||+----------------------> "1" CODE DESCRIPTOR
+                     ||+------------------+
+                     |+------------------+|
+                     v                   ||
+               SEGMENT IN MEMORY         vv 
+                                         00 --> "0" RING NUMBER (kernel mode)
+
+               Other values for ring number are 01, 10, 11 (user mode)
+
+            **************************************************************
+            ****** SO THIS SEGMENT IS USED TO PUT INSTRUCTIONS AND *******
+            ****** NOT DATA, AND IS TO BE USED BY THE CPU IN RING 0*******
+            **************************************************************
+
+Phew!!!! That was a bunch of bits!!! I hope you could understand the
+break down.
+
+I will save you from the explanation of the DATA SEGMENT, it's almost
+the same. Humm, not really. Let's dig in. They are really look alike,
+IN OUR KERNEL (it could be really different in another project). Take
+a look:
+
+   CODE  0x00CF9A000000FFFF (We've just broke down this one)
+   DATA  0x00CF92000000FFFF
+                |
+                |       Bit representation of "2":
+		|
+                +--------> 0010
+                           ||||
+                           |||+-> WE ARE NOT USING IT			   
+                           ||+--> "1" READABLE/WRITABLE
+                           |+---> WE ARE NOT USING IT
+                           +----> DATA SEGMENT
+			   
+It states that it goes from memory address 0x0 to 0xFFFFFFFF (4GB of
+memory), it's a data segment, you can't execute code, it's readable
+and writable. That's it. Phew again !!!!
+
+
+
+...
+
+
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.
