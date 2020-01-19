@@ -194,7 +194,8 @@ Next, follow these steps to make the bootloader run fakekernel.s:
 
 =======================================================================
 
-3 - Kernel main file (src/kernel/kalimera.s - TO BE UPLOADED YET)
+3 - Kernel main file (src/kernel/kalimera.s)
+
 +-- Timestamp: 2020-01-07-13:20 ---+
 
 The idea is to create the bare bones functionality in one file, and
@@ -294,7 +295,27 @@ following steps:
 
      **** CODE IN 32 BITS WITH THE PROCESSOR IN PROTECTED-MODE ****
 
-     G - Code executing in 32 bits protected-mode.
+     G - Code executing in 32 bits protected-mode. This first part of
+         the code in 32bits executes the "function" setDATA. This
+         "function" initializes all data segment registers with the
+         GDT entry 0x10, which is an entry for a DATA SEGMENT. The
+         code for that is like this:
+	 
+         .code32
+         setDATA:
+
+             /* DATA DESCRIPTOR */
+             mov     $0x10, %eax   # INFORMS GDT ENTRY RESPONSIBLE FOR DATA SEGMENT
+             mov     %eax, %ss
+             mov     %eax, %ds
+             mov     %eax, %es
+             mov     %eax, %fs
+             mov     %eax, %gs
+
+     I - Test if PM bit in CR0 is set to 1. If so, I just print the message
+         "KALIMERA KERNEL >> 32bits Protected Mode <<" to the screen.
+     J - In order to have some fun. After the message, I put an ascii
+         art of the USS Enterprise on the screen and animate it. Yey!!!
 
 As you could see it's not as easy as we present it to students when
 teaching Operating Systems. Well, you use any abstraction that suits
@@ -302,7 +323,7 @@ the audience.
 
 Now let's cut to the chase. Let's code this.
 
-   SEE FILE src/kernel/kalimera.s (TO BE UPLOADED)
+   SEE FILE src/kernel/kalimera.s
 
 I decided to make the GDT with the following entries:
 
@@ -330,8 +351,10 @@ I decided to make the GDT with the following entries:
         movb    $0xCF,   0x816
         movb    $0x00,   0x817
 
-The bottom line is, both the CODE SEGMENT and the DATA SEGMENT are 4GB
-long, goes from 0x0 and 0xFFFFFFFF. Now let me break a GDT entry down.
+Putting it in simple words, both the CODE SEGMENT and the DATA SEGMENT are 4GB
+long, goes from 0x0 and 0xFFFFFFFF. Now let me break a GDT entry down. THIS IS
+GOLD, SAVE IT SOMEWHERE.
+
 Entry 0x8 (CODE SEGMENT) will be put in memory like this:
 
 <pre>
@@ -355,7 +378,7 @@ Now let's break it down:
 					     This is a 20 bit number, all set
 					     to "1".  2^20 equals 1M.
    * GRANULARITY
-                              ..        ....
+                              .
       Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                               |
                            +--+---+       
@@ -375,7 +398,7 @@ Now let's break it down:
             **************************************************************
 
    * BASE ADDRESS
-                            ....  ..........   
+                            ..    ......   
       Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                             ||    ||||||
                             |+---+||||||
@@ -390,7 +413,7 @@ Now let's break it down:
 
 
    * SEGMENT TYPE (CODE / DATA)
-                            ................   
+                                ..   
       Higher addresses  - 0x00CF9A000000FFFF -  Lower Addresses
                                 ||
                        +--------++-------+
@@ -416,14 +439,17 @@ Now let's break it down:
             **************************************************************
 </pre>
 
-Phew!!!! That was a bunch of bits!!! I hope you could understand the
-break down.
+Phew!!!! That was a bunch of bits!!! I hope you could have understood
+the break down.
 
 I will save you from the explanation of the DATA SEGMENT, it's almost
-the same. Humm, not really. Let's dig in. They are really look alike,
+the same. Humm, not really. Let's dig in. They are really look alike
 IN OUR KERNEL (it could be really different in another project). Take
 a look:
+
+
 <pre>
+                .
    CODE  0x00CF9A000000FFFF (We've just broke down this one)
    DATA  0x00CF92000000FFFF
                 |
@@ -435,16 +461,29 @@ a look:
                            ||+--> "1" READABLE/WRITABLE
                            |+---> WE ARE NOT USING IT
                            +----> DATA SEGMENT
-</pre>			   
+</pre>
+
+
 It states that it goes from memory address 0x0 to 0xFFFFFFFF (4GB of
 memory), it's a data segment, you can't execute code, it's readable
 and writable. That's it. Phew again !!!!
 
++-- Timestamp: 2020-01-19-16:25 ---+
 
+Now we have a program that runs in 32bits protected-mode without any
+help of any OS. This program discarded all the BIOS IVT. It's on it's
+own now. Now what? How are we going to transform this program in an OS
+kernel. Next steps:
 
-...
-
-
+        - Create ALL IVT entries for hard/soft and exceptions
+	- Create code for each IVT pointer (interrupt handler)
+	- Create a multitasking environment:
+	  -- Context switching logic
+	  -- Scheduler
+	- Device drivers for some hardware we want to use
+	- ...
+	
+Yeah! This is going to be fun. 	
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.

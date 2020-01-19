@@ -12,7 +12,7 @@ all:
 	(cd src/kernel; make all; cd -)
 
 run:
-	#(cd src/kernel; make run; cd -)
+	(cd src/kernel; make run; cd -)
 
 clean:
 	(cd src/bootloader; make clean; cd -)

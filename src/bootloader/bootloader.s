@@ -16,13 +16,13 @@
 	 * THIS IS USED TO KEEP BOTH bootloader AND fakekernel
 	 * IN THE SAME SEGMENT
 	 */
-	.set KADDR, 0x800       
-	.set TOTAL_RAM, 0x7ee8  
+	#.set KADDR, 0x800       
+	#.set TOTAL_RAM, 0x7ee8  
 
 	
 	/* REAL KERNEL ADDRESSES */
-	#.set KADDR, 0x1000
-	#.set TOTAL_RAM, 0xf0f0
+	.set KADDR, 0x1000
+	.set TOTAL_RAM, 0xf0f0
 	
 #--------------------------------------------------------------------------
 EDDPACKET:

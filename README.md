@@ -8,6 +8,8 @@ So far, the planned features/architecture are: x86 (32 bits), protected-mode, ri
 
 It should be small and simple enough to enable anyone to grasp the workings of the entire kernel. Yep, you've just read it. It will be written in AT&T assembly language syntax and C.
 
+Please, read the file [docs/journal.md](docs/journal.md).
+
 ```mermaid
 pie title Source Code Distribution so far (lines)
     "x86-Assembly" :  3448
@@ -17,3 +19,18 @@ pie title Source Code Distribution so far (lines)
 ```
 
 Please, read the file [docs/journal.md](docs/journal.md).
+But for the impatient, read next.
+
+-----------------------------------------------------------------------------
+
+In order to run the kalimera kernel you will need A REAL PC or a
+virtual machine, like Qemu or VirtualBox. This is a work in progress,
+so the Makefile supports only qemu for now. So, make sure you have qemu
+installed in your system.
+
+In order to run the kalimera kernel with a pretty cool animation:
+
+      make clean; make run
+
+
+Enjoy!
