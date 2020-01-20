@@ -450,7 +450,7 @@ a look:
 
 <pre>
                 .
-   CODE  0x00CF9A000000FFFF (We've just broke down this one)
+   CODE  0x00CF9A000000FFFF (We've just broke this one down)
    DATA  0x00CF92000000FFFF
                 |
                 |       Bit representation of "2":
