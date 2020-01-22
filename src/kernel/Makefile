@@ -37,5 +37,7 @@ ${OUTPUTDIR}/hd-kalimera.img: ${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/bootloader.
 
 
 ${OUTPUTDIR}/bootloader.bin:
+	# MAKE SURE WE DISABLE __FAKEKERNEL__
+	sed -i 's/.set __FAKEKERNEL__, 1/#.set __FAKEKERNEL__, 0/g' ../bootloader/bootloader.s
 	(cd ../bootloader; make all; cd -)
 

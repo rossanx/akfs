@@ -151,21 +151,10 @@ what's going on.
 
 Next, follow these steps to make the bootloader run fakekernel.s:
 
-             A - cd src/bootloader
-	         Open FILE bootloader.s and make sure you comment
-	         the real values used by the REAL KERNEL, and uncomment
-		 line:
-
-                       #.set __FAKEKERNEL__, 0
-
-                 to become like this:
-		 
-                       .set __FAKEKERNEL__, 0
-
-                 This changes some values to enable running fakekernel.
-		 
              I created a Makefile with recipes to execute the next steps:
-	     
+
+             A - Change variable to indicate bootloader to load
+                 fakekernel instead of kalimera
              B - Assemble and link bootloader.s
              C - Assemble and link fakekernel.s
              D - create a qemu disk
@@ -173,9 +162,11 @@ Next, follow these steps to make the bootloader run fakekernel.s:
              F - write fakekernel.bin to second sector
              G - run qemu with all the parameters
 
-             So, just go to the directory src/bootloader and type:
+             So, just go to the main directory of kalimera installation
+             (it's where you put the files of the repository you cloned)
+             and type:
 
-                make clean; make test
+                make clean; make testbl
 
 =======================================================================
 

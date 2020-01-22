@@ -33,8 +33,12 @@ test: ${OUTPUTDIR}/hd-fakekernel.img
 	cp run-bootloader-test.sh ${OUTPUTDIR}/run-bootloader-test.sh
 	chmod 755 ${OUTPUTDIR}/run-bootloader-test.sh
 	cd ${OUTPUTDIR}; ./run-bootloader-test.sh; cd -
+	sed -i 's/.set __FAKEKERNEL__, 1/#.set __FAKEKERNEL__, 0/g' bootloader.s
 
 ${OUTPUTDIR}/hd-fakekernel.img: ${OUTPUTDIR}/fakekernel.bin ${OUTPUTDIR}/bootloader.bin
+	sed -i 's/#.set __FAKEKERNEL__, 0/.set __FAKEKERNEL__, 1/g' bootloader.s
+	(make all)
+
 	dd if=/dev/zero of=${OUTPUTDIR}/hd-fakekernel.img bs=1024 count=10000
 	dd if=${OUTPUTDIR}/bootloader.bin of=${OUTPUTDIR}/hd-fakekernel.img bs=1 conv=notrunc
 	dd if=${OUTPUTDIR}/fakekernel.bin of=${OUTPUTDIR}/hd-fakekernel.img bs=1 conv=notrunc seek=512
