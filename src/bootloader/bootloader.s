@@ -4,7 +4,7 @@
 * Author: Rossano Pablo Pinto (rossano at gmail dot com)
 * Date: Tue Feb 10 17:52:46 BRT 2015
 */
-	
+
 	.code16               # Generate 16-bit code
 	.text                 # Executable code location
 	.globl _start;        # INFORMS CODE ENTRY POINT
@@ -12,17 +12,23 @@
 #--------------------------------------------------------------------------
 	/* SOME USEFUL VARIABLES */
 
+#.set __FAKEKERNEL__, 0
+
+	
+.ifdef __FAKEKERNEL__
 	/* FAKEKERNEL ADDRESSES
 	 * THIS IS USED TO KEEP BOTH bootloader AND fakekernel
 	 * IN THE SAME SEGMENT
 	 */
-	#.set KADDR, 0x800       
-	#.set TOTAL_RAM, 0x7ee8  
+	.set KADDR, 0x800       
+	.set TOTAL_RAM, 0x7ee8  
 
+.else
 	
 	/* REAL KERNEL ADDRESSES */
 	.set KADDR, 0x1000
 	.set TOTAL_RAM, 0xf0f0
+.endif
 	
 #--------------------------------------------------------------------------
 EDDPACKET:
@@ -207,7 +213,9 @@ end:
 
 /* IT'S COMMON PRACTICE TO DECLARE ALL MESSAGE "VARIABLES"
  * AT THE END OF THE FILE
- */ 
+*/
+
+	
 msg:	    .asciz ">KALIMERA BOOT LOADER --- Press enter to run kernel\n\r"
 
 	

@@ -98,11 +98,6 @@ order to use the EDD service, we need to specify a Disk Address Packet
 13h (invoked with the instruction "int $0x13") what to copy and where
 to put it. Excerpt from our bootloader (showing our DAP):
 
-    #.set KADDR, 0x800   # THIS IS USED TO KEEP BOTH bootloader
-                         # AND fakekernel IN THE SAME SEGMENT
-			  
-    .set KADDR, 0x1000   # REAL KERNEL ADDRESS
-    
     EDDPACKET:
             .byte  16, 0, 122, 0  # packet-size, always 0, sectors-max127, always 0
             .short 0x0000, KADDR  # BUFFER MEMORY ADDRESS	
@@ -156,37 +151,27 @@ what's going on.
 
 Next, follow these steps to make the bootloader run fakekernel.s:
 
-            A - cd src/bootloader
-	    
-	        Open FILE linker-script and change 0x10000 to 0x8000
-                (we are informing the linker that our code starts at
-                memory address 0x8000. This will translate all
-                addresses used by the code accordingly - we are not
-                using relocatable code, it's all FIXED!!!)
-		   
-                IMPORTANT: Observe that the correct value is
-                           0x8000 (8 thousand)
-		 
-	     B - Open FILE bootloader.s and make sure you comment
+             A - cd src/bootloader
+	         Open FILE bootloader.s and make sure you comment
 	         the real values used by the REAL KERNEL, and uncomment
-		 the values used by the fakekernel. You will end up with
-		 something like this:
-		 
-                      .set KADDR, 0x800  
-                      .set TOTAL_RAM, 0x7ee8
-                      #.set KADDR, 0x1000 # REAL KERNEL ADDRESS      
-                      #.set TOTAL_RAM, 0xf0f0
+		 line:
 
-                 IMPORTANT: Observe that KADDR is 0x800 (8 hundred)
+                       #.set __FAKEKERNEL__, 0
+
+                 to become like this:
+		 
+                       .set __FAKEKERNEL__, 0
+
+                 This changes some values to enable running fakekernel.
 		 
              I created a Makefile with recipes to execute the next steps:
 	     
-             C - Assemble and link bootloader.s
-             D - Assemble and link fakekernel.s
-             E - create a qemu disk
-             F - write the bootloader.bin to first sector
-             G - write fakekernel.bin to second sector
-             H - run qemu with all the parameters
+             B - Assemble and link bootloader.s
+             C - Assemble and link fakekernel.s
+             D - create a qemu disk
+             E - write the bootloader.bin to first sector
+             F - write fakekernel.bin to second sector
+             G - run qemu with all the parameters
 
              So, just go to the directory src/bootloader and type:
 
@@ -475,13 +460,13 @@ help of any OS. This program discarded all the BIOS IVT. It's on it's
 own now. Now what? How are we going to transform this program in an OS
 kernel. Next steps:
 
-        - Create ALL IVT entries for hard/soft and exceptions
-	- Create code for each IVT pointer (interrupt handler)
-	- Create a multitasking environment:
-	  -- Context switching logic
-	  -- Scheduler
-	- Device drivers for some hardware we want to use
-	- ...
+     - Create ALL IVT entries for hard/soft and exceptions
+     - Create code for each IVT pointer (interrupt handler)
+     - Create a multitasking environment:
+       -- Context switching logic
+       -- Scheduler
+     - Device drivers for some hardware we want to use
+     - ...
 	
 Yeah! This is going to be fun. 	
 

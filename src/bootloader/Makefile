@@ -41,7 +41,7 @@ ${OUTPUTDIR}/hd-fakekernel.img: ${OUTPUTDIR}/fakekernel.bin ${OUTPUTDIR}/bootloa
 
 
 ${OUTPUTDIR}/fakekernel.bin: ${OUTPUTDIR}/fakekernel.o
-	ld -x -s -m elf_i386 -Map=${OUTPUTDIR}/fakekernel.map -Tlinker-script ${OUTPUTDIR}/fakekernel.o -o ${OUTPUTDIR}/fakekernel.bin
+	ld -x -s -m elf_i386 -Map=${OUTPUTDIR}/fakekernel.map -Tlinker-script-fakekernel ${OUTPUTDIR}/fakekernel.o -o ${OUTPUTDIR}/fakekernel.bin
 
 
 ${OUTPUTDIR}/fakekernel.o: fakekernel.s
