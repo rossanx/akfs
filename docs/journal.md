@@ -289,9 +289,9 @@ following steps:
              mov     %eax, %fs
              mov     %eax, %gs
 
-     I - Test if PM bit in CR0 is set to 1. If so, I just print the message
+     H - Test if PM bit in CR0 is set to 1. If so, I just print the message
          "KALIMERA KERNEL >> 32bits Protected Mode <<" to the screen.
-     J - In order to have some fun. After the message, I put an ascii
+     I - In order to have some fun. After the message, I put an ascii
          art of the USS Enterprise on the screen and animate it. Yey!!!
 
 As you could see it's not as easy as we present it to students when
@@ -469,12 +469,13 @@ Yeah! This is going to be fun.
 3.2 - IDT
 
 Ok. Let's touch the IDT subject. What is it for? CPUs handle
-stochastic (random) events with a mechanism called "INTERRUPTS". It
-does what the word means: it interrupts the current flow of
-instructions of the CPU and executes another one to handle the
-situation. The situation can be classified into 3 categories:
-EXCEPTION, HARDWARE INTERRUPT, and SOFTWARE INTERRUPT.  All these
-categories are treated using the same mechanism:
+stochastic (random) events, system service calls, and "internal
+errors" (exceptions) with a mechanism called "INTERRUPTS". It does
+what the word means: it interrupts the current flow of instructions of
+the CPU and executes another one to handle the situation. The
+situation can be classified into 3 categories: EXCEPTION, HARDWARE
+INTERRUPT, and SOFTWARE INTERRUPT (system calls). All these categories
+are treated using the same mechanism:
 
        A - CPU "receives/perceives" the event
        B - CPU saves context (copies the contents of almost all registers
@@ -489,7 +490,7 @@ categories are treated using the same mechanism:
 
 Intel CPUs uses "event" numbers 0 to 31 to represent EXCEPTIONS. So,
 IDT entries from 0 to 31 must deal with the handling of these
-exceptions.  The defined Intel CPUs exceptions are:
+exceptions. The defined Intel CPUs exceptions are:
 
           +---------Exception
           |  +------Meaning
@@ -520,7 +521,7 @@ exceptions.  The defined Intel CPUs exceptions are:
 
 So, our IDT will have the first 32 entries filled-up with stuff to
 deal with EXCEPTIONS. Most exceptions are the result of some
-instruction executed or to be executed by the CPU.  For instance, if
+instruction executed or to be executed by the CPU. For instance, if
 you try to divide a number by 0, the CPU will generate the exception
 "Divide by zero exception".
 
@@ -538,8 +539,10 @@ enough for now). When the CPU receives this hardware interrupt, it
 tries to discover which device were responsible for that. After that,
 the CPU does the same A-E actions described before. Each device uses
 an IRQ number in order to be identified. For instance, the clock
-device uses IRQ 0. We plan to deal with the following hardware in
-kalimera (listing with IRQ number and device):
+device uses IRQ 0.
+
+We plan to deal with the following hardware in kalimera (listing with
+IRQ number and device):
 
       IRQ0  - CLOCK
       IRQ1  - KEYBOARD
@@ -548,16 +551,17 @@ kalimera (listing with IRQ number and device):
 
 So, if the first 32 IDT entries were occupied by the exceptions stuff,
 the next free entry is 32. So, IRQ0 will fire the loading of IDT entry
-32. Our IDT entries for the HARDWARE INTERRUPTS will be:
+32. Our IDT entries for the HARDWARE INTERRUPTS will be the following:
 
       Entry 32 - IRQ0  - CLOCK
       Entry 33 - IRQ1  - KEYBOARD
       Entry 36 - IRQ4  - SERIAL PORT
       Entry 43 - IRQ11 - ETHERNET NEWORK CARD
 
-Be patient, we are almost coding. We decided to put our IDT at block
-0x0-0x7ff. Each IDT entry occupies 8 bytes and has the following
-structure:
+Be patient, we are almost coding!!
+
+We decided to put our IDT at block 0x0-0x7ff. Each IDT entry is 8
+bytes long and has the following structure:
 
        - OFFSET - bits 0-15 (16 bits)
        - SELECTOR - it's 0x8 in kalimera - chooses 2nd GDT entry (16 bits)
@@ -596,7 +600,7 @@ goes like this:
           second GDT entry)
         - At LINE4 I write the following: 0x8e00
           Let me break it into bits:
-             TYPE/ATTRIBUTES      NOT USED FIELD (ALWAYS SET IT TI ZERO)
+             TYPE/ATTRIBUTES      FIELD NOT USED (ALWAYS SET IT TI ZERO)
                      8E             00
                    10001110       00000000
                    ||||||||
@@ -646,7 +650,7 @@ see the macro next:
 	          iret
           .endm	
 
-This macro were supposed to handle the exception. In our kernel, at
+This macro were supposed to "handle" the exception. In our kernel, at
 least for now, it will only print a message informing you should
 reboot and enter an infinite loop. That's it.
 
@@ -681,9 +685,16 @@ Yey!!
 
       SEE FILE src/kernel/utils.c
 
-Next, I think I'll create a device driver for a PS/2 keyboard. Input is
-an important thing in every computer system. An input device will enable
-us to do some tricks and control our kernel with special keys.
+We are going to program "high level" stuff, like the scheduler, the
+taskloader, the TCP/IP stack, the ARP/RARP protocol, and several other
+network stuff, in C. Even the code to deal with the PCI bus will be
+written in C.
+
+Next, I think I'll create a device driver for a PS/2 keyboard. Input
+is an important thing in every computer system. An input device will
+enable us to do some tricks and control our kernel with special
+keys. It will also allow us to do some mundane stuff, like typing
+text...
 Stay tuned.
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
