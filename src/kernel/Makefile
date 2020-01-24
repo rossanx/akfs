@@ -8,11 +8,19 @@ OUTPUTDIR=../../bin
 
 all: ${OUTPUTDIR}/kalimera.o ${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/kalimera.map
 
-${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/kalimera.map: ${OUTPUTDIR}/kalimera.o
-	ld -x -s -m elf_i386 -Tlinker-script ${OUTPUTDIR}/kalimera.o -o ${OUTPUTDIR}/kalimera.bin -Map ${OUTPUTDIR}/kalimera.map
+${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/kalimera.map: ${OUTPUTDIR}/kalimera.o ${OUTPUTDIR}/utils.o ${OUTPUTDIR}/exceptions0to31.o
+	ld -x -s -m elf_i386 -Tlinker-script ${OUTPUTDIR}/kalimera.o ${OUTPUTDIR}/utils.o ${OUTPUTDIR}/exceptions0to31.o -o ${OUTPUTDIR}/kalimera.bin -Map ${OUTPUTDIR}/kalimera.map
 
 ${OUTPUTDIR}/kalimera.o: kalimera.s
 	as -32 --gstabs+ -o ${OUTPUTDIR}/kalimera.o kalimera.s
+
+${OUTPUTDIR}/utils.o: utils.c
+	gcc -fno-stack-protector -fno-pic -m32 -c utils.c -o ${OUTPUTDIR}/utils.o
+
+${OUTPUTDIR}/exceptions0to31.o: exceptions0to31.s
+	as -32 --gstabs+ -o ${OUTPUTDIR}/exceptions0to31.o exceptions0to31.s
+
+
 
 clean:
 	rm -f ${OUTPUTDIR}/kalimera.o
@@ -20,6 +28,8 @@ clean:
 	rm -f ${OUTPUTDIR}/kalimera.map
 	rm -f ${OUTPUTDIR}/hd-kalimera.img
 	rm -f ${OUTPUTDIR}/run-kalimera.sh
+	rm -f ${OUTPUTDIR}/exceptions0to31.o
+	rm -f ${OUTPUTDIR}/utils.o
 	(cd ../bootloader; make clean; cd -)
 	@echo ">>>+++++ Showing remaining files at ${OUTPUTDIR}:"
 	ls ${OUTPUTDIR}
@@ -37,7 +47,31 @@ ${OUTPUTDIR}/hd-kalimera.img: ${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/bootloader.
 
 
 ${OUTPUTDIR}/bootloader.bin:
-	# MAKE SURE WE DISABLE __FAKEKERNEL__
+# MAKE SURE WE DISABLE __FAKEKERNEL__
 	sed -i 's/.set __FAKEKERNEL__, 1/#.set __FAKEKERNEL__, 0/g' ../bootloader/bootloader.s
 	(cd ../bootloader; make all; cd -)
 
+
+############################ RUN TESTS ######################################
+
+## GENERATES A DIVIDE BY ZERO EXCEPTION
+zero: 
+	sed -i 's/#.set __DIVIDE_BY_ZERO_EXCEPTION__, 0/.set __DIVIDE_BY_ZERO_EXCEPTION__, 1/g' kalimera.s
+	(make all && make ${OUTPUTDIR}/hd-kalimera.img)
+	sed -i 's/.set __DIVIDE_BY_ZERO_EXCEPTION__, 1/#.set __DIVIDE_BY_ZERO_EXCEPTION__, 0/g' kalimera.s
+	(cd ${OUTPUTDIR}; ./run-kalimera.sh; cd -)
+
+## GENERATES AN INVALID OPCODE EXCEPTION
+opcode: 
+	sed -i 's/#.set __INVALID_OPCODE_EXCEPTION__, 0/.set __INVALID_OPCODE_EXCEPTION__, 1/g' kalimera.s
+	(make all && make ${OUTPUTDIR}/hd-kalimera.img)
+	sed -i 's/.set __INVALID_OPCODE_EXCEPTION__, 1/#.set __INVALID_OPCODE_EXCEPTION__, 0/g' kalimera.s
+	(cd ${OUTPUTDIR}; ./run-kalimera.sh; cd -)
+
+
+## GENERATES A General Protection Fault EXCEPTION
+gpf: 
+	sed -i 's/#.set __GPF_EXCEPTION__, 0/.set __GPF_EXCEPTION__, 1/g' kalimera.s
+	(make all && make ${OUTPUTDIR}/hd-kalimera.img)
+	sed -i 's/.set __GPF_EXCEPTION__, 1/#.set __GPF_EXCEPTION__, 0/g' kalimera.s
+	(cd ${OUTPUTDIR}; ./run-kalimera.sh; cd -)

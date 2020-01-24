@@ -197,16 +197,17 @@ protected mode. Things are a little bit easier in real-mode, as you
 don't need some of the structures present in protected-mode. In
 real-mode the position of the interrupt vector table (IVT) is fixed at
 the very beginning of memory. On the other hand, in protected-mode the
-IVT can be placed anywhere in memory. To inform where the IVT is you
-should create a table called IDT (Interrupt Descriptor Table). In
-protected-mode you can configure areas of the memory to be used as
-code or data placeholders with rigid limits. In order to do that, you
-create a table that informs how the memory should be used and where
-that memory starts and ends. This table is called GDT (Global
-Descriptor Table). Any process that is created can have it's own GDT
-entry. In our case, we are going to create kernel threads to run our
-tasks (always switched to ring 0) - kalimera kernel will not run
-user-space code, i.e., CPU running in ring 3, at least for now. In
+IVT can be placed anywhere in memory. In protected-mode, the IVT is
+called IDT (Interrupt Descriptor Table). In protected-mode you can
+configure areas of the memory to be used as code or data placeholders
+with rigid limits. In order to do that, you create a table that
+informs how the memory should be used and where that memory starts and
+ends. This table is called GDT (Global Descriptor Table). Any process
+that is created can have it's own GDT entry (usually a pointer to an
+LDT - Local Descriptor Table - We are not using LDTs in kalimera, at
+least for now). In our case, we are going to create kernel threads to
+run our tasks (always switched to ring 0) - kalimera kernel will not
+run user-space code, i.e., CPU running in ring 3, at least for now. In
 doing so, every thread shares the same GDT entries.
 
 GDT is a complex beast where you can configure a bunch of things
@@ -296,6 +297,8 @@ following steps:
 As you could see it's not as easy as we present it to students when
 teaching Operating Systems. Well, you use any abstraction that suits
 the audience.
+
+3.1 - GDT
 
 Now let's cut to the chase. Let's code this.
 
@@ -451,7 +454,7 @@ help of any OS. This program discarded all the BIOS IVT. It's on it's
 own now. Now what? How are we going to transform this program in an OS
 kernel. Next steps:
 
-     - Create ALL IVT entries for hard/soft and exceptions
+     - Create ALL IVT(IDT) entries for hard/soft and exceptions
      - Create code for each IVT pointer (interrupt handler)
      - Create a multitasking environment:
        -- Context switching logic
@@ -460,6 +463,228 @@ kernel. Next steps:
      - ...
 	
 Yeah! This is going to be fun. 	
+
++-- Timestamp: Wed Jan 22 22:36:02 -03 2020 --+
+
+3.2 - IDT
+
+Ok. Let's touch the IDT subject. What is it for? CPUs handle
+stochastic (random) events with a mechanism called "INTERRUPTS". It
+does what the word means: it interrupts the current flow of
+instructions of the CPU and executes another one to handle the
+situation. The situation can be classified into 3 categories:
+EXCEPTION, HARDWARE INTERRUPT, and SOFTWARE INTERRUPT.  All these
+categories are treated using the same mechanism:
+
+       A - CPU "receives/perceives" the event
+       B - CPU saves context (copies the contents of almost all registers
+           to memory).
+       C - CPU uses the "number of the event" (interrupt/exception number)
+           to index an IDT entry (aha moment!!! :)).
+       D - CPU fetches the routine to handle the event and handle it
+       E - When finished, CPU returns from the interrupt (it restores
+           the previous context - copies all register values saved in memory
+	   back to the CPU registers and resume previous "interrupted"
+	   flow/task).
+
+Intel CPUs uses "event" numbers 0 to 31 to represent EXCEPTIONS. So,
+IDT entries from 0 to 31 must deal with the handling of these
+exceptions.  The defined Intel CPUs exceptions are:
+
+          +---------Exception
+          |  +------Meaning
+          |  |
+          v  v
+         00: "Divide by zero exception          "
+         01: "Debug exception                   "
+         02: "NMI exception                     "
+         03: "Breakpoint exception              "
+         04: "Overflow exception                "
+         05: "Out of Bounds exception           "
+         06: "Invalid OpCode exception          "
+         07: "No coprocessor exception          "
+         08: "Double Fault exception            "
+         09: "Coprocessor Segment exception     "
+         10: "Bad TSS exception                 "
+         11: "Segment not present exception     "
+         12: "Stack Fault exception             "
+         13: "General Protection Fault exception"
+         14: "Page fault exception              "
+         15: "Unknown Interrupt exception       "
+         16: "Coprocessor Fault exception       "
+         17: "Alignment Check exception         "
+         18: "Machine Check exception           "
+         19: "Reserved exception                "
+         ...
+         31: "Reserved exception                "
+
+So, our IDT will have the first 32 entries filled-up with stuff to
+deal with EXCEPTIONS. Most exceptions are the result of some
+instruction executed or to be executed by the CPU.  For instance, if
+you try to divide a number by 0, the CPU will generate the exception
+"Divide by zero exception".
+
+Next entries are "reserved" to deal with HARDWARE INTERRUPTS. HARDWARE
+INTERRUPTS are events generated by external devices connected to the
+CPU (you may argue that some devices were embedded in the CPU, etc.. -
+it doesn't matter here). Intel CPUs have one single PIN to be used as
+a way to be informed a HARDWARE INTERRUPT happened. If a device wants
+to be handled by the CPU, it generates a signal on that PIN (actually,
+it's more complicated than that!!! To be able to connect several
+devices to the CPU using one single interrupt PIN, a device called
+Programmable Interrupt Controller - PIC - is used. I will get into the
+details when discussing the code, so this simplified explanation is
+enough for now). When the CPU receives this hardware interrupt, it
+tries to discover which device were responsible for that. After that,
+the CPU does the same A-E actions described before. Each device uses
+an IRQ number in order to be identified. For instance, the clock
+device uses IRQ 0. We plan to deal with the following hardware in
+kalimera (listing with IRQ number and device):
+
+      IRQ0  - CLOCK
+      IRQ1  - KEYBOARD
+      IRQ4  - SERIAL PORT
+      IRQ11 - ETHERNET NETWORK CARD
+
+So, if the first 32 IDT entries were occupied by the exceptions stuff,
+the next free entry is 32. So, IRQ0 will fire the loading of IDT entry
+32. Our IDT entries for the HARDWARE INTERRUPTS will be:
+
+      Entry 32 - IRQ0  - CLOCK
+      Entry 33 - IRQ1  - KEYBOARD
+      Entry 36 - IRQ4  - SERIAL PORT
+      Entry 43 - IRQ11 - ETHERNET NEWORK CARD
+
+Be patient, we are almost coding. We decided to put our IDT at block
+0x0-0x7ff. Each IDT entry occupies 8 bytes and has the following
+structure:
+
+       - OFFSET - bits 0-15 (16 bits)
+       - SELECTOR - it's 0x8 in kalimera - chooses 2nd GDT entry (16 bits)
+       - NOT USED - set it to zero (8 bits)
+       - TYPE AND ATTRIBUTES - (8 bits) - More details when presenting the code
+       - OFFSET - bits 16-31 (16 bits)
+
+OFFSET is the address of the routine (function) for that entry, so
+when that entry is selected, that code gets to be executed.
+
+Ok. Let's code the IDT entries. Let's start with the EXCEPTIONS.
+
+      SEE FILE src/kernel/exceptions0to31.s
+
+Let me break the first entry down. The code to register the handler
+for exception 0 is:
+
+        movl    $_exception00, %eax     # LINE1
+        movw    %ax, (0*8)              # LINE2
+        movw    $0x08, (0*8+2)          # LINE3
+        movw    $0x8e00, (0*8+4)        # LINE4
+        shr     $16, %eax               # LINE5
+        movw    %ax, (0*8+6)            # LINE6
+
+I defined a function called _exception00 to deal with exception zero.
+Let's call this function "handler". For now, It doesn't matter what it
+does. All you have to grasp now is how to register an IDT entry. It
+goes like this:
+
+        - At LINE1 I load the address of _exception00 (handler)
+          into register EAX
+	- At LINE2 I write the first 16 bits of the handler address
+          into the first 2 bytes of the 1st IDT entry
+        - At LINE3 I write the GDT entry to be considered when executing
+          this handler (kalimera will always use 0x8 - that's the
+          second GDT entry)
+        - At LINE4 I write the following: 0x8e00
+          Let me break it into bits:
+             TYPE/ATTRIBUTES      NOT USED FIELD (ALWAYS SET IT TI ZERO)
+                     8E             00
+                   10001110       00000000
+                   ||||||||
+                   ||||++++--> GATE TYPE : 1110 equal "Interrupt Gate"
+                   |||+------> 0 - for Interrupt Gates
+                   |++-------> Privilege Level - 00 - KERNEL MODE
+                   +---------> 1 - Interrupt Present
+
++-- Timestamp: Thu Jan 23 22:30:12 -03 2020 --+
+
+Now when exception "Divide by zero" is generated by the CPU, "function"
+_exception00 is called. Let's take a look at the function:
+
+         /* Devide by zero exception */
+         _exception00:
+                 cli
+                 pushl $0 # TO BE USED BY deal_with_it (ERROR CODE)
+                 pushl $0 # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
+
+                 pushl  $0x07       # FG: GREY
+                 pushl  $0x00       # BG: BLACK		
+                 pushl  $ex_msg_00
+                 pushl  $24
+                 pushl  $0
+                 call print
+                 addl	$20, %esp
+	
+                 deal_with_it
+
+This function disables HARDWARE INTERRUPTS (cli), puts the ERROR CODE
+and the EXCEPTION NUMBER on the stack (first two "pushl"s). Then it
+prints a message informing the exception (next "pushl"s and "call
+print"). After that, a macro called deal_with_it is called. You can
+see the macro next:
+
+          .macro deal_with_it
+                  pushl   $0x0E     # FG: YELLOW
+                  pushl   $0x00     # BG: BLACK	
+                  pushl	$action_msg # MSG
+                  pushl	$24         # COLUMN
+                  pushl	$1          # LINE
+                  call print	
+          1:	
+	          jmp 1b   # JUST FOR TESTING PURPOSES: Every exception puts
+                           # the system into an infinite loop.
+                           # You should reboot!!!
+	          iret
+          .endm	
+
+This macro were supposed to handle the exception. In our kernel, at
+least for now, it will only print a message informing you should
+reboot and enter an infinite loop. That's it.
+
+Phew !!!!
+
+In order to make kalimera kernel install the IDT entries discussed so
+far, file exceptions0to31.s defines a "function" called
+register_exceptions. This function is called from kalimera.s just
+after printing the yellow message at the top of the screen.
+
+In order to test if our exception handlers are being called when an
+exception occurs, I provided 3 more Makefile targets. To generate an
+exception "Divide by zero" and test the handler, type:
+
+         make clean; make zero
+
+To generate an exception "Invalid OPCODE" and test the handler, type:
+
+         make clean; make opcode
+
+To generate an exception "General Protection Fault" and test the
+handler, type:
+
+         make clean; make gpf
+
+
+So far, messages were print to the screen using assembly language. To
+make things easier, I defined a C function called print (the one used
+in the exception handlers and in the macro. This function is defined
+at file src/kernel/utils.c. That's the first code in C in our kernel!!
+Yey!!
+
+      SEE FILE src/kernel/utils.c
+
+Next, I think I'll create a device driver for a PS/2 keyboard. Input is
+an important thing in every computer system. An input device will enable
+us to do some tricks and control our kernel with special keys.
+Stay tuned.
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.

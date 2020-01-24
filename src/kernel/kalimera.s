@@ -17,6 +17,10 @@
  *             -0x04000000 - kernel stack (GROWS DOWNWARDS)
 *************************************************************************/
 
+#.set __DIVIDE_BY_ZERO_EXCEPTION__, 0
+#.set __INVALID_OPCODE_EXCEPTION__, 0
+#.set __GPF_EXCEPTION__, 0
+	
 .section .text
 
 	.set TOTAL_RAM, 0xf0f0
@@ -72,7 +76,7 @@ buildgdt:
         movw    $0x0000, 0x804
         movw    $0x0000, 0x806
 
-        /* ENTRY 0x8 - CODE SEGMENT */
+        /* ENTRY 0x8 - CODE SEGMENT */ 
         movw    $0xFFFF, 0x808
         movw    $0x0000, 0x80A
         movb    $0x00,   0x80C
@@ -151,6 +155,43 @@ protected_mode_ok:
         stosw
         loop .loop0
 
+
+install_exceptions:
+	call register_exceptions
+
+
+print_a_message_to_screen:
+	pushl $0x00   # BG COLOR : BLACK
+	//pushl $0x09   # FG COLOR : LIGHT BLUE
+	pushl $0x07   # FG COLOR : LIGHT GREY
+	pushl $today  # STRING
+	pushl $48     # COLUMN
+	pushl $23     # LINE
+	call print
+
+	
+/* TEST SOME EXCEPTIONS */	
+.ifdef __DIVIDE_BY_ZERO_EXCEPTION__
+        /* TEST DIVIDE BY ZERO EXCEPTION */
+	movl $0, %ebx
+	divl %ebx
+.endif
+.ifdef __INVALID_OPCODE_EXCEPTION__
+        /* TEST INVALID OPCODE EXCEPTION */
+	#mov $0x10, %eax
+	#mov %eax, %cs
+	mov $-1, %eax
+	mov %eax, %cs
+.endif
+.ifdef __GPF_EXCEPTION__
+        /* GENERAL PROTECTION FAULT EXCEPTION */
+	int $0xFF
+.endif	
+
+
+
+
+	
 /* LET'S CELEBRATE WITH AN "ENTERPRISE!!!!" ANIMATION */
 jmp print_enterprise
 	
@@ -195,7 +236,7 @@ print_enterprise:
 .end_print_enterprise:	
 
 
-/* ANIMATE ENTERPSISE */
+/* ANIMATE ENTERPRISE */
 .set ENGINE_POS, (VIDEO+(LINE_SIZE*12)+39)	
 animate:
 	xorl %ecx, %ecx
@@ -291,3 +332,8 @@ line6:
 line7:
 	.asciz "                  `--.____,--'                  "
 	.equ   L7LEN, . - line7
+
+today:
+	.asciz "Thu Jan 23 15:53:08 -03 2020"
+	.equ   TODAYLEN, . - today
+	

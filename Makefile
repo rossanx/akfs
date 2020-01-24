@@ -23,3 +23,11 @@ clean:
 testbl:
 	(cd src/bootloader; make test; cd -)
 
+zero:
+	(cd src/kernel; make zero; cd -)
+
+opcode:
+	(cd src/kernel; make opcode; cd -)
+
+gpf:
+	(cd src/kernel; make gpf; cd -)

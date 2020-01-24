@@ -16,9 +16,8 @@
 
 	
 .ifdef __FAKEKERNEL__
-	/* FAKEKERNEL ADDRESSES
-	 * THIS IS USED TO KEEP BOTH bootloader AND fakekernel
-	 * IN THE SAME SEGMENT
+	/* FAKEKERNEL ADDRESSES - THIS IS USED TO KEEP BOTH
+	 * bootloader AND fakekernel IN THE SAME SEGMENT
 	 */
 	.set KADDR, 0x800       
 	.set TOTAL_RAM, 0x7ee8  
@@ -62,7 +61,7 @@ _start:                    # THIS IS THE CODE ENTRY POINT
 	/* CLEAR SCREEN */
 	call cls
 
-	/* DETECT THE MOUNT OF RAM */
+	/* DETECT THE AMOUNT OF RAM */
 	call detect_memory
 	
 /* PRINT MSG TO SCREEN! */
@@ -103,7 +102,7 @@ dispatch:
 /* CLEAR SCREEN */
 cls:
 	pusha
-	mov	$0x0, %ah
+	mov	$0x00, %ah
 	mov	$0x03, %al
 	int	$0x10
 	popa
