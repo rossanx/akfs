@@ -20,6 +20,7 @@
 #.set __DIVIDE_BY_ZERO_EXCEPTION__, 0
 #.set __INVALID_OPCODE_EXCEPTION__, 0
 #.set __GPF_EXCEPTION__, 0
+
 	
 .section .text
 
@@ -145,29 +146,58 @@ test_protected_mode:
  */        	
 protected_mode_ok:
         xor     %eax, %eax
-        mov     $0xE,   %ah   # FG:YELLOW, BG:BLACK
-        cld
-        mov     $msgkernel, %esi #$msgkernel, %esi
-        mov     $VIDEO+32, %edi   # WRITE MESSAGE AT POSITION 16, FIRST LINE
-        mov     $MSGLEN,    %ecx        
+        mov     $0xE,   %ah      # FG:YELLOW, BG:BLACK
+        cld                      # ENABLE STRING OPS TO INC INDEX REGS ESI/EDI  
+        mov     $msgkernel, %esi # INFORM ADDRESS OF STRING
+        mov     $VIDEO+32,  %edi # INFOMR SCREEN POSITION: LINE 1, COL 16
+        mov     $MSGLEN,    %ecx # INFORM STRING LENGHT
 .loop0:
-        lodsb
+        lodsb                    # READ STRING AND WRITE IT ON THE SCREEN
         stosw
         loop .loop0
 
 
 install_exceptions:
-	call register_exceptions
+	call register_exceptions         /* exceptions0to31.s */
 
+install_device_drivers:
+
+	call init_pic_device_driver      /* dev.pic.s */
+	call init_keyboard_device_driver /* dev.keyboard.s */
 
 print_a_message_to_screen:
-	pushl $0x00   # BG COLOR : BLACK
-	//pushl $0x09   # FG COLOR : LIGHT BLUE
-	pushl $0x07   # FG COLOR : LIGHT GREY
-	pushl $today  # STRING
-	pushl $48     # COLUMN
-	pushl $23     # LINE
-	call print
+        pushl $0x00   # BG COLOR : BLACK
+        pushl $0x07   # FG COLOR : LIGHT GREY
+        pushl $type_text  # STRING
+        pushl $48     # COLUMN
+        pushl $23     # LINE
+        call print
+
+	
+        /****
+	 **** VERY IMPORTANT:
+	 **** MASK ALL INTERRUPTS BUT keyboard
+	 **** WE ARE ABOUT TO ENABLE INTERRUPTS. IF SOME DEVICE THAT
+	 **** HAS NOT IDT ENTRY RAISES AN INTERRUPT, YOU CRASH YOUR MACHINE
+	*/
+mask_some_interrupts:	
+	/**** MASK ALL INTERRUPTS BUT keyboard ****/
+        movb   $0b11111101, %al
+	       #  ||||||||
+	       #  |||||||+-> IRQ0	
+	       #  ||||||+--> IRQ1 - OUR KEYBOARD (ONLY INTERRUPT ENABLED)
+	       #  |||||+---> IRQ2 - ROUTER FOR IRQs 8 to 15
+               #  ||||+----> IRQ3
+	       #  |||+-----> IRQ4
+	       #  ||+------> IRQ5
+	       #  |+-------> IRQ6
+	       #  +--------> IRQ7
+        outb   %al, $0x21
+        outb   %al, $0xA1
+
+	/**** ENABLE INTERRUPTS - FINALLY !!!! UHUUU !!! ****/
+enable_interrupts:	
+	sti # NOW POTENTIALLY BAD THINGS CAN HAPPEN 
 
 	
 /* TEST SOME EXCEPTIONS */	
@@ -333,7 +363,7 @@ line7:
 	.asciz "                  `--.____,--'                  "
 	.equ   L7LEN, . - line7
 
-today:
-	.asciz "Thu Jan 23 15:53:08 -03 2020"
-	.equ   TODAYLEN, . - today
-	
+
+type_text:
+	.asciz "TRY TO TYPE SOME TEXT"
+	.equ   TTLEN, . - type_text
