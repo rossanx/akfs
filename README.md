@@ -13,10 +13,10 @@ Please, read the file [docs/journal.md](docs/journal.md).
 ```mermaid
 pie title Source Code Distribution so far (lines)
     "C" :  19
-    "x86-Assembly" :  4966
-    "Shel Script" :  212
-    "Makefile/linker script" :  792
-    "Documentation" :  2094
+    "x86-Assembly" :  5510
+    "Shel Script" :  254
+    "Makefile/linker script" :  826
+    "Documentation" :  2372
 ```
 
 Please, read the file [docs/journal.md](docs/journal.md).
