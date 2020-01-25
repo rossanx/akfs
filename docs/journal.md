@@ -291,7 +291,16 @@ following steps:
 
      H - Test if PM bit in CR0 is set to 1. If so, I just print the message
          "KALIMERA KERNEL >> 32bits Protected Mode <<" to the screen.
-     I - In order to have some fun. After the message, I put an ascii
+	 
+     I - In order to make things safer, I moved kernel stack out of the way!
+         I set it to be at the end of memory. It grows downwards, as always:
+
+            move_kernel_stack_to_end_of_memory:	
+                    ### STACK AT THE END OF CONFIGURED MEMORY
+                    movl	TOTAL_RAM, %ebp
+                    movl	TOTAL_RAM, %esp
+
+     J - In order to have some fun. After the message, I put an ascii
          art of the USS Enterprise on the screen and animate it. Yey!!!
 
 As you could see it's not as easy as we present it to students when
@@ -794,7 +803,6 @@ other details while we do it:
 
       SEE FILE src/kernel/dev.keyboard.s
 
-
 File dev.keyboard.s starts with initialization code for the PS/2
 Controller. It puts the controller in a known state. After that, the
 device driver registers a handler for the IRQ1 in the IDT entry number
@@ -817,12 +825,16 @@ pressed/released key. One thing to notice is that the keyboard raises
 an interrupt when the key is pressed and a second time when the key is
 released.
 
++-- Timestamp: Sat Jan 25 14:10:20 -03 2020 --+
+
 Just for fun, I also programmed two actions: one for the key BACKSPACE
 and another for the key ENTER. They do what they are supposed to do in
 an editor: 
 
          - BACKSPACE - delete previous character and move cursor to the left
          - ENTER - go to the next line
+
+
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.

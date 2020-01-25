@@ -203,7 +203,7 @@ register_exceptions:
 	
 /* Devide by zero exception */
 _exception00:
-	cli
+	#cli
 	pushl $0   # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $0   # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -219,7 +219,7 @@ _exception00:
 
 /* Debug exception */
 _exception01:
-	cli
+	#cli
 	pushl $0   # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $1   # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -236,7 +236,7 @@ _exception01:
 
 /* NMI exception */
 _exception02:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $2    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -254,7 +254,7 @@ _exception02:
 
 /* Breakpoint exception */
 _exception03:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $3    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -271,7 +271,7 @@ _exception03:
 	
 /* Overflow exception */
 _exception04:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $4    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -286,7 +286,7 @@ _exception04:
 
 /* Out of Bounds exception */
 _exception05:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $5    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -302,7 +302,7 @@ _exception05:
 	
 /* Invalid OpCode exception */
 _exception06:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $6    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -318,7 +318,7 @@ _exception06:
 
 /* No coprocessor exception */
 _exception07:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $7    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -334,7 +334,7 @@ _exception07:
 
 /* Double Fault exception */
 _exception08:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $8    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -349,7 +349,7 @@ _exception08:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* Coprocessor Segment exception */
 _exception09:
-	cli
+	#cli
 	pushl $0    # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $9    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -365,7 +365,7 @@ _exception09:
 
 /* Bad TSS exception */
 _exception10:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $10    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -381,7 +381,7 @@ _exception10:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* Segment not present exception */
 _exception11:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $11    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -396,7 +396,7 @@ _exception11:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* Stack Fault exception */
 _exception12:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $12    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -411,7 +411,7 @@ _exception12:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* General Protection Fault exception */
 _exception13:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $13    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -427,7 +427,7 @@ _exception13:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* Page fault exception */
 _exception14:  # ERROR CODE PUSHED BY PROCESSOR
-	cli
+	#cli
 	pushl $14    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
 	pushl   $0x07       # FG: GREY
@@ -443,7 +443,7 @@ _exception14:  # ERROR CODE PUSHED BY PROCESSOR
 
 /* Unknown Interrupt exception */
 _exception15:
-	cli
+	#cli
 	pushl $0     # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $15    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -459,7 +459,7 @@ _exception15:
 
 /* Coprocessor Fault exception */
 _exception16:
-	cli
+	#cli
 	pushl $0     # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $16    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -475,7 +475,7 @@ _exception16:
 
 /* Alignment Check exception */
 _exception17:
-	cli
+	#cli
 	pushl $0     # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $17    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -492,7 +492,7 @@ _exception17:
 
 /* Machine Check exception */
 _exception18:
-	cli
+	#cli
 	pushl $0     # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $18    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 	
@@ -508,7 +508,7 @@ _exception18:
 
 /* Reserved exception */
 _exception19to31:
-	cli
+	#cli
 	pushl $0       # TO BE USED BY deal_with_it (ERROR CODE)
 	pushl $1931    # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 

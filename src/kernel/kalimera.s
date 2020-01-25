@@ -28,6 +28,8 @@
 	.set MEMORY_SUFFIX, 'M'
 	.set VIDEO, 0xb8000
 	.set LINE_SIZE, 160
+	.set STACKADDR, 0x4000000   # GROWS DOWNWARDS FROM 64MB
+	
 /*      
  * CREATE "POINTERS" TO TABLES GDT AND IDT
  *
@@ -52,7 +54,7 @@ _start:
         or      $0x02,  %al    # TO REAL MODE. LOOK FOR "A20 LINE x86" ON THE 
         out     %al,    $0x92  # WEB IF YOU WANT TO KNOW THE DETAILS
 	
-	/* SET STACK SEGMENT AND STACK POINTER */
+	/* SET TEMPORARY STACK SEGMENT AND STACK POINTER */
         xorw    %ax, %ax       # SET %ax REGISTER TO ZERO
         movw    %ax, %ss       # SET ADDRESS OF STACK SEGMENT TO ZERO
         movw    $8192, %sp     # POINT %sp TO 8K (TOP OF THE STACK)
@@ -156,7 +158,12 @@ protected_mode_ok:
         stosw
         loop .loop0
 
+move_kernel_stack_to_end_of_memory:	
+	### STACK AT THE END OF CONFIGURED MEMORY
+	movl	TOTAL_RAM, %ebp
+	movl	TOTAL_RAM, %esp
 
+	
 install_exceptions:
 	call register_exceptions         /* exceptions0to31.s */
 
@@ -280,7 +287,9 @@ animate:
 	mov $0xE, %cl          
 	mov $'-', %ch
         movw %cx, (%ebx, %edi)
-	call sleep
+	pusha       ## TRY TO GARANTEE INTERRUPT WON'T MESS REG UP
+	call sleep  # SLEEP RECEIVES NO ARGUMENTS
+	popa        ## TRY TO GARANTEE INTERRUPT WON'T MESS REG UP
 	cmp $0, %eax
 	je .initialize_put_space
 	subl $1, %eax # DECREMENT OUTER LOOP
@@ -296,7 +305,9 @@ animate:
 	mov $0xE, %cl          
 	mov $' ', %ch
         movw %cx, (%ebx, %edi)
-	call sleep
+	pusha       ## TRY TO GARANTEE INTERRUPT WON'T MESS REG UP
+	call sleep  # SLEEP RECEIVES NO ARGUMENTS
+	popa        ## TRY TO GARANTEE INTERRUPT WON'T MESS REG UP
 	cmp $0, %eax
 	je .end_of_put_space
 	subl $1, %eax # DECREMENT OUTER LOOP

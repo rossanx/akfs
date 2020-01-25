@@ -12,7 +12,6 @@
 init_keyboard_device_driver:
 	pusha
 
-
 	/*
         * INITIALIZE PS/2 CONTROLLER - 	## 2020-01-23
 	*  >>> THIS IS A SIMPLIFIED VERSION - IT DOEN'T DEAL WITH
