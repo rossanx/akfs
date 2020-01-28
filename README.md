@@ -33,5 +33,24 @@ In order to run the kalimera kernel with a pretty cool animation:
 
       make clean; make run
 
+Here are some milestones marked with tags:
+
+      v0.05-kernel-device-driver-pic-keyboard
+      v0.04-kernel-IDT-32-exceptions
+      v0.03-kernel-in-32bit-protected-mode
+      v0.02-bootloader-detect-memory
+      v0.01-simple-bootloader
+
+You can travel in time by just typing:
+
+      git checkout <tag>
+
+For instance, to checkout tag v0.03-kernel-in-32bit-protected-mode:
+
+      git checkout v0.03-kernel-in-32bit-protected-mode
+
+To return to the future:
+
+      git checkout master
 
 Enjoy!

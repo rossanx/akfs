@@ -223,8 +223,8 @@ following steps:
      FIRST STEP: DISABLE INTERRUPTS. THIS IS IMPORTANT. IF YOU SWITCH
                  TO PROTECTED-MODE WITHOUT DEFINING AN IVT, YOU WILL
                  CRASH YOUR MACHINE. IF AN INTERRUPT IS RAISED AND YOU
-                 DONT'T HAVE AN INTERRUPT HANDLER FOR THAT, BEHAVIOR IS
-                 UNDEFINED. YOU COULD END UP EXECUTING WHATEVER GARBAGE
+                 DONT'T HAVE AN INTERRUPT HANDLER (ISR) FOR THAT, BEHAVIOR
+		 IS UNDEFINED. YOU COULD END UP EXECUTING WHATEVER GARBAGE
                  THE PROCESSOR WOULD EVENTUALLY POINT TO!!!! SO:
 		 
                      cli
@@ -464,7 +464,8 @@ own now. Now what? How are we going to transform this program in an OS
 kernel. Next steps:
 
      - Create ALL IVT(IDT) entries for hard/soft and exceptions
-     - Create code for each IVT pointer (interrupt handler)
+     - Create code for each IVT pointer (interrupt handler/Interrupt Service
+       Routine)
      - Create a multitasking environment:
        -- Context switching logic
        -- Scheduler
@@ -570,7 +571,7 @@ the next free entry is 32. So, IRQ0 will fire the loading of IDT entry
 Be patient, we are almost coding!!
 
 We decided to put our IDT at block 0x0-0x7ff. Each IDT entry is 8
-bytes long and has the following structure:
+bytes (64 bits) long and has the following structure:
 
        - OFFSET - bits 0-15 (16 bits)
        - SELECTOR - it's 0x8 in kalimera - chooses 2nd GDT entry (16 bits)
@@ -579,7 +580,26 @@ bytes long and has the following structure:
        - OFFSET - bits 16-31 (16 bits)
 
 OFFSET is the address of the routine (function) for that entry, so
-when that entry is selected, that code gets to be executed.
+when that entry is selected, that code gets to be executed. 
+
+This is another view for the IDT entry structure. If you look at the code
+you'll always see the SELECTOR and TYPE/ATTRIBUTES with the same values:
+
+       OFFSET       TYPE/      NOT       SELECTOR           OFFSET
+    (HIGHER BITS)   ATTRIB     USED                      (LOWER BITS)
+
+   3322222222211111 00000000 00000000 1111110000000000 1111110000000000 
+   1098765432109876 76543210 76543210 5432109876543210 5432109876543210 
+  +----------------+--------+--------+----------------+----------------+ bits
+  |                |10001110|00000000|0000000000001000|                |
+  +----------------+--------+--------+----------------+----------------+
+                    ||||||||
+		    ||||++++-> GATE TYPE (Interrupt Gate)
+		    |||+-----> 0 FOR INT/TRAP GATES
+		    |++------> DESCIPTOR PRIVILEDGE LEVEL (RING 0)
+		    +--------> 1 FOR USED INTERRUPT, 0 OTHERWISE
+
+
 
 3.2.1 - EXCEPTIONS
 
@@ -587,7 +607,7 @@ Ok. Let's code the IDT entries. Let's start with the EXCEPTIONS.
 
       SEE FILE src/kernel/exceptions0to31.s
 
-Let me break the first entry down. The code to register the handler
+Let me break the first entry down. The code to register the handler (ISR)
 for exception 0 is:
 
         movl    $_exception00, %eax     # LINE1
@@ -833,7 +853,6 @@ an editor:
 
          - BACKSPACE - delete previous character and move cursor to the left
          - ENTER - go to the next line
-
 
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
