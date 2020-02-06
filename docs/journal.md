@@ -864,7 +864,7 @@ execute... It will end up raising an exception... So, we need to mask
 all the interrupts we don't wnat to deal with at the moment. In order to do that
 you execute the following code presentat file kalimera.s:
 
-'''
+<pre>
       mask_some_interrupts:	
               /**** MASK ALL INTERRUPTS BUT keyboard ****/
               movb   $0b11111101, %al
@@ -879,7 +879,7 @@ you execute the following code presentat file kalimera.s:
                      #  +--------> IRQ7
               outb   %al, $0x21
               outb   %al, $0xA1
-'''
+</pre>
 
 In the previous code we masked all interrupts but the keyboard
 interrupt 1. After this we can FINALLY enable interrupts with
