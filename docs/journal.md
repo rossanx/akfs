@@ -856,7 +856,7 @@ an editor:
 +-- Timestamp: Wed Feb  5 23:10:51 -03 2020 --+
 
 Ok. In order to put our keyboard device driver to work, we need to
-enable interrupts. \^o^/. If we just do that we will cause an
+enable interrupts. :open_mouth:. If we just do that we will cause an
 exception!!! It happens because several devices present in your
 motherboard generates interrupts. If an interrupt is raised and we
 don't have a proper IDT entry for it, some garbage code will
