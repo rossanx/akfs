@@ -784,7 +784,7 @@ device driver will feature:
               (this is too soon, :)) - We will get there)
            -- We could program an action for the three-finger-salute
               (ctrl+alt+del)
-         - UNBEFFERED OUTPUT (writes directly on the screen) - Version 1
+         - UNBUFFERED OUTPUT (writes directly on the screen) - Version 1
          - BUFFERED OUTPUT (writes to a buffer that can be consumed by
            different tasks - threads). - Version 2
 
@@ -842,7 +842,7 @@ device driver registers a handler for the IRQ1 in the IDT entry number
 Function "readkeyboard" is the interrupt handler for the keyboard. It
 basically reads IO port 0x60 and extract the scan code for the
 pressed/released key. One thing to notice is that the keyboard raises
-an interrupt when the key is pressed and a second time when the key is
+an interrupt when the key is pressed and a second one when the key is
 released.
 
 +-- Timestamp: Sat Jan 25 14:10:20 -03 2020 --+
@@ -853,6 +853,38 @@ an editor:
 
          - BACKSPACE - delete previous character and move cursor to the left
          - ENTER - go to the next line
+
++-- Timestamp: Wed Feb  5 23:10:51 -03 2020 --+
+
+Ok. In order to put our keyboard device driver to work, we need to
+enable interrupts. \^o^/. If we just do that we will cause an
+exception!!! It happens because several devices present in your
+motherboard generates interrupts. If an interrupt is raised and we
+don't have a proper IDT entry for it, some garbage code will
+execute... It will end up raising an exception... So, we need to mask
+all the interrupts we don't wnat to deal with at the moment. In order to do that
+you execute the following code presentat file kalimera.s:
+
+'''
+      mask_some_interrupts:	
+              /**** MASK ALL INTERRUPTS BUT keyboard ****/
+              movb   $0b11111101, %al
+                     #  ||||||||
+                     #  |||||||+-> IRQ0	
+                     #  ||||||+--> IRQ1 - OUR KEYBOARD (ONLY INTERRUPT ENABLED)
+                     #  |||||+---> IRQ2 - ROUTER FOR IRQs 8 to 15
+                     #  ||||+----> IRQ3
+                     #  |||+-----> IRQ4
+                     #  ||+------> IRQ5
+                     #  |+-------> IRQ6
+                     #  +--------> IRQ7
+              outb   %al, $0x21
+              outb   %al, $0xA1
+'''
+
+We the previous code we masked all interrupts but the keyboard
+interrupt 1. After this we can FINALLY enable interrupts with
+"sti". YeY!!!
 
 
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
