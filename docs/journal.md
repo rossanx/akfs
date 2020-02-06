@@ -585,6 +585,7 @@ when that entry is selected, that code gets to be executed.
 This is another view for the IDT entry structure. If you look at the code
 you'll always see the SELECTOR and TYPE/ATTRIBUTES with the same values:
 
+<pre>
        OFFSET       TYPE/      NOT       SELECTOR           OFFSET
     (HIGHER BITS)   ATTRIB     USED                      (LOWER BITS)
 
@@ -598,8 +599,7 @@ you'll always see the SELECTOR and TYPE/ATTRIBUTES with the same values:
 		    |||+-----> 0 FOR INT/TRAP GATES
 		    |++------> DESCIPTOR PRIVILEDGE LEVEL (RING 0)
 		    +--------> 1 FOR USED INTERRUPT, 0 OTHERWISE
-
-
+</pre>
 
 3.2.1 - EXCEPTIONS
 
@@ -624,7 +624,7 @@ goes like this:
 
         - At LINE1 I load the address of _exception00 (handler)
           into register EAX
-	- At LINE2 I write the first 16 bits of the handler address
+        - At LINE2 I write the first 16 bits of the handler address
           into the first 2 bytes of the 1st IDT entry
         - At LINE3 I write the GDT entry to be considered when executing
           this handler (kalimera will always use 0x8 - that's the
