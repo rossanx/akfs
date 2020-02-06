@@ -647,7 +647,6 @@ _exception00 is called. Let's take a look at the function:
 
          /* Devide by zero exception */
          _exception00:
-                 cli
                  pushl $0 # TO BE USED BY deal_with_it (ERROR CODE)
                  pushl $0 # TO BE USED BY deal_with_it (EXCEPTION NUMBER)
 
@@ -661,11 +660,10 @@ _exception00 is called. Let's take a look at the function:
 	
                  deal_with_it
 
-This function disables HARDWARE INTERRUPTS (cli), puts the ERROR CODE
-and the EXCEPTION NUMBER on the stack (first two "pushl"s). Then it
-prints a message informing the exception (next "pushl"s and "call
-print"). After that, a macro called deal_with_it is called. You can
-see the macro next:
+This function puts the ERROR CODE and the EXCEPTION NUMBER on the
+stack (first two "pushl"s). Then it prints a message informing the
+exception (next "pushl"s and "call print"). After that, a macro called
+deal_with_it is called. You can see the macro next:
 
           .macro deal_with_it
                   pushl   $0x0E     # FG: YELLOW
@@ -683,7 +681,8 @@ see the macro next:
 
 This macro were supposed to "handle" the exception. In our kernel, at
 least for now, it will only print a message informing you should
-reboot and enter an infinite loop. That's it.
+reboot and enter an infinite loop. That's it. It never returns/resumes
+from an exception.
 
 Phew !!!!
 
@@ -882,7 +881,7 @@ you execute the following code presentat file kalimera.s:
               outb   %al, $0xA1
 '''
 
-We the previous code we masked all interrupts but the keyboard
+In the previous code we masked all interrupts but the keyboard
 interrupt 1. After this we can FINALLY enable interrupts with
 "sti". YeY!!!
 
