@@ -886,6 +886,19 @@ interrupt 1. After this we can FINALLY enable interrupts with
 "sti". YeY!!!
 
 
++-- Timestamp: Fri Feb  7 10:38:22 -03 2020 --+
+
+I wasn't happy with the intermixed code to deal with key press and
+printing a corresponding char on the screen. So I stripped out all
+the printing on the screen thing and keyboard map from
+dev.keyboard.s. Now, It's done by dev.terminal.s.
+
+      SEE FILE src/kernel/dev.terminal.s
+
+It also provides "hardware cursor" now. It's much better than the
+"software cursor" I implemented before (you get automatic blinking
+:smiley:!!)  Yey!.
+
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.
 
