@@ -54,7 +54,10 @@ init_keyboard_device_driver:
 	outb %al, $0x64
 	/* END OF PS/2 INITIALIZATION */
 
+	
+	/* INSTALL KEYBOARD INTERRUPT HANDLER */
 	call install_keyboard_int_handler
+
 	
 	popa
 	ret
@@ -70,13 +73,6 @@ install_keyboard_int_handler:
 	movw	$0x8e00, (33*8+4)
 	shr	$16, %eax
 	movw	%ax, (33*8+6)
-
-	/**** INFORM WHERE TO WRITE ON THE SCREEN ****/
-	/**** THIS IS A SIN, I KNOW, VERSION 2 OF THIS
-	 **** DEVICE DRIVER WILL USE BUFFERS TO REGISTER
-	 **** WHAT IS TYPED AND LET TASKS CONSUME IT,
-	 **** WHAT WOULD EVENTUALLY PRINT IT ON THE SCREEN */
-	movl $(0xb8000+160*15+20), keyline
 	
 	popa
 	ret
@@ -87,13 +83,6 @@ readkeyboard:
 	/**** SAVE REGISTERS ****/
 	pusha
 
-	/**** WHERE TO PRINT ****/
-	mov	keyline, %edi
-
-	/**** show cursor ****/
-	movl	keycol, %ebx
-	movb	$0x5f, %es:0(%edi, %ebx, 1)
-	
 	#### PORT 0x64 	WHEN READING STATUS REGISTER
 	# 7 6 5 4 3 2 1 0
 	# | | | | | | | |
@@ -111,60 +100,14 @@ readkeyboard:
 	/**** READ KEY PRESSED ****/
 	inb	$0x60, %al
 
-	/**** IGNORE KEY RELEAD FOR NOW ****/
+	/**** IGNORE KEY RELEASE FOR NOW ****/
 	cmp	$0, %al
 	jng	.out
 
-
-/**** ASSOCIATE KEY VALUES TO ACTIONS ****/
+	push %eax
+	call deal_with_key
+	add $4, %esp
 	
-	/**** IF KEY IS "DEL", INVOKE AN APPROPRIATE ACTION ****/
-	cmp	$0x0e, %al
-	je	.delkey
-
-	/**** IF KEY IS "ENTER", INVOKE AN APPROPRIATE ACTION ****/
-	cmp	$0x1c, %al
-	je	.enterkey
-
-/**** PRINT CHAR IF NO ACTION DEFINED FOR THE KEY ****/	
-
-	/**** "INSTALL" KEYMAP ****/
-	movl	$keymap, %esi	
-	xor     %ecx, %ecx
-	movb	%al, %bl
-	movb	(%esi, %ebx, 1), %cl
-		
-	/**** KEEP TRACK OF CURSOR ****/
-	movl	keycol, %ebx
-	/**** PRINT CHAR ON THE SCREEN ****/
-	movb	%cl, %es:(%edi, %ebx, 1)
-	addl	$2, keycol
-	movl	keycol, %ebx
-	/**** PRINT CURSOR ON THE SCREEN ****/
-	movb	$0x5f, %es:(%edi, %ebx, 1)
-	jmp 	.out
-
-/**** ACTIONS *****/
-	
-	/**** ACTION FOR DEL KEY ****/
-.delkey:
-	movl	keycol, %ebx
-	movb	$0x20, %es:(%edi, %ebx, 1)
-	subl	$2, keycol
-	movl	keycol, %ebx
-	movb	$0x5f, %es:(%edi, %ebx, 1)
-	jmp 	.out
-
-	/**** ACTION FOR ENTER KEY ****/
-.enterkey:
-	movl	keycol, %ebx
-	movb	$' ', %es:(%edi, %ebx, 1)
-	addl	$160, keyline
-	movl	$0, keycol
-	movl	$0, %ebx
-	movl	keyline, %edi
-	movb	$0x5f, %es:(%edi, %ebx, 1)
-	jmp	.out
 
 .out:
 	
@@ -181,21 +124,4 @@ readkeyboard:
 
 	/**** RETURN FROM INTERRUPT ****/
 	iret
-
-/**** WELL, THAT'S OUR KEYMAP ****/	
-#---------------------------------------------------------------------
-keymap:
-	.ascii " [1234567890-=[[qwertyuiop[][[asdfghjkl;'`["
-	.byte	92 # value for backslash
-	.ascii	"zxcvbnm,./[*[ [FFFFFFFFFF[[756-1230.[[C"
-#---------------------------------------------------------------------
-
-	
-.section .data
-
-/* THIS IS USED TO KEEP TRACK OF THE CURSOR */
-keyline:
-	.int	0
-keycol:
-	.int	0
 

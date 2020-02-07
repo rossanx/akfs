@@ -171,7 +171,8 @@ install_device_drivers:
 
 	call init_pic_device_driver      /* dev.pic.s */
 	call init_keyboard_device_driver /* dev.keyboard.s */
-
+	call init_terminal               /* dev.terminal.s */
+	
 print_a_message_to_screen:
         pushl $0x00   # BG COLOR : BLACK
         pushl $0x07   # FG COLOR : LIGHT GREY

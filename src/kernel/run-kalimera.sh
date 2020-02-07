@@ -7,7 +7,9 @@
 # Date: Tue Jan 07 14:17:32 BRT 2020
 #
 
-sudo qemu \
+#sudo qemu
+
+qemu \
      -no-reboot \
      -cpu coreduo \
      -m 64 \
