@@ -28,6 +28,22 @@ deal_with_key:
 	cmp	$0x1c, %al
 	je	.enterkey
 
+       /**** IF KEY IS "UP" KEY, INVOKE AN APPROPRIATE ACTION ****/
+        cmp     $0x48, %al
+        je      .up
+
+        /**** IF KEY IS "DOWN" KEY, INVOKE AN APPROPRIATE ACTION ****/
+        cmp     $0x50, %al
+        je      .down
+        
+        /**** IF KEY IS "LEFT" KEY, INVOKE AN APPROPRIATE ACTION ****/
+        cmp     $0x4b, %al
+        je      .left
+
+        /**** IF KEY IS "RIGHT" KEY, INVOKE AN APPROPRIATE ACTION ****/
+        cmp     $0x4d, %al
+        je      .right
+	
 /**** PRINT CHAR IF NO ACTION DEFINED FOR THE KEY ****/	
 
 	/**** "INSTALL" KEYMAP ****/
@@ -83,8 +99,58 @@ deal_with_key:
 	movl %eax, cursor_offset # NOW WE ARE AT THE BEGINNING OF THE NEXT LINE
 	call move_cursor
 
-	/* YEAH, REDUNDANT FOR NOW, BUT WE INTEND TO ADD MORE ACTIONS */
 	jmp	.out
+
+        /**** ACTION FOR UP KEY ****/
+.up:
+	/**** PRINT CHAR ON THE SCREEN ****/
+	subl    $160, char_offset
+	movl    (char_offset), %ebx
+	
+	/**** MOVE CURSOR ON THE SCREEN ****/
+	subl    $80, cursor_offset
+	call    move_cursor	
+        jmp     .out    
+
+        /**** ACTION FOR DOWN KEY ****/
+.down:
+	/**** PRINT CHAR ON THE SCREEN ****/
+	addl    $160, char_offset
+	movl    (char_offset), %ebx
+	
+	/**** MOVE CURSOR ON THE SCREEN ****/
+	addl    $80, cursor_offset
+	call    move_cursor	
+        jmp     .out    
+
+       /**** ACTION FOR LEFT KEY ****/ 
+.left:
+	/**** PRINT CHAR ON THE SCREEN ****/
+	subl    $2, char_offset
+	movl    (char_offset), %ebx
+	
+	/**** MOVE CURSOR ON THE SCREEN ****/
+	subl    $1, cursor_offset
+	call    move_cursor
+        jmp     .out
+
+        /**** ACTION FOR RIGHT KEY ****/
+.right:
+	/**** PRINT CHAR ON THE SCREEN ****/
+	addl    $2, char_offset
+	movl    (char_offset), %ebx
+	
+	/**** MOVE CURSOR ON THE SCREEN ****/
+	addl    $1, cursor_offset
+	call    move_cursor
+        jmp     .out
+
+.release:
+        ### TODO
+	
+	/* YEAH, REDUNDANT FOR NOW, BUT WE INTEND TO ADD MORE ACTIONS */
+        jmp .out
+
 
 .out:
 	

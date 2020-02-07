@@ -899,6 +899,10 @@ It also provides "hardware cursor" now. It's much better than the
 "software cursor" I implemented before (you get automatic blinking
 :smiley:!!)  Yey!.
 
++-- Timestamp: Fri Feb  7 13:10:17 -03 2020 --+
+
+I added actions for UP, DOWN, LEFT, and WRITE keys.
+
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.
 
