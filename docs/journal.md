@@ -46,7 +46,7 @@ the firmware. Considering we have a machine (real or virtual - qemu or
 virtualbox) that has a hard disk, we must provide a code that fits in
 512 bytes (actually 510).
 
-   SEE FILE src/bootloader/bootloader.s
+      SEE FILE src/bootloader/bootloader.s
 
 After programming and compiling this bootloader we need a way of
 writing it to the "MBR". If the machine is virtual (qemu) it's
@@ -147,7 +147,7 @@ in decimal format. Let's go ahead and do it to test our
 bootloader. Take a look at the file src/bootloader/fakekernel.s to see
 what's going on.
 
-   SEE FILE src/bootloader/fakekernel.s
+      SEE FILE src/bootloader/fakekernel.s
 
 Next, follow these steps to make the bootloader run fakekernel.s:
 
@@ -311,7 +311,7 @@ the audience.
 
 Now let's cut to the chase. Let's code this.
 
-   SEE FILE src/kernel/kalimera.s
+      SEE FILE src/kernel/kalimera.s
 
 I decided to make the GDT with the following entries:
 
@@ -764,7 +764,7 @@ developed. But for this kernel I want to organize the features in
 related to multitasking, which is a feature I intend to provide in a
 near future. Also, it's nice to have some fun typing on a screen using
 a device driver you created, with a keyboard map you invented, with
-key press/release actions you developd.
+key press/release actions you developed.
 
 So, let's start with a keyboard (PS/2) device driver. A device driver
 knows how to "drive" a piece of hardware, for instance, a keyboard or
@@ -860,11 +860,11 @@ an editor:
 Ok. In order to put our keyboard device driver to work, we need to
 enable interrupts. :open_mouth:. If we just do that we will cause an
 exception!!! It happens because several devices present in your
-motherboard generates interrupts. If an interrupt is raised and we
+motherboard generate interrupts. If an interrupt is raised and we
 don't have a proper IDT entry for it, some garbage code will
 execute... It will end up raising an exception... So, we need to mask
-all the interrupts we don't wnat to deal with at the moment. In order
-to do that you execute the following code presentat file kalimera.s:
+all the interrupts we don't want to deal with at the moment. In order
+to do that you execute the following code present at file kalimera.s:
 
 <pre>
       mask_some_interrupts:	
@@ -893,9 +893,10 @@ interrupt 1. After this we can FINALLY enable interrupts with
 **TERMINAL "DEVICE DRIVER"**
 
 I wasn't happy with the intermixed code to deal with key press and
-printing a corresponding char on the screen. So I stripped out all
-the printing on the screen thing and keyboard map from
-dev.keyboard.s. Now, It's done by dev.terminal.s.
+printing a corresponding char on the screen, even in this version 1 of
+the device driver. So I stripped out all the printing on the screen
+stuff and keyboard map from dev.keyboard.s. Now, It's done by
+dev.terminal.s.
 
       SEE FILE src/kernel/dev.terminal.s
 
