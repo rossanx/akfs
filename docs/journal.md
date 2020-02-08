@@ -427,7 +427,7 @@ Now let's break it down:
             **************************************************************
 </pre>
 
-Phew!!!! That was a bunch of bits!!! I hope you could have understood
+Phew :sweat_smile:!!!! That was a bunch of bits!!! I hope you could have understood
 the break down.
 
 I will save you from the explanation of the DATA SEGMENT, it's almost
@@ -454,7 +454,7 @@ a look:
 
 It states that it goes from memory address 0x0 to 0xFFFFFFFF (4GB of
 memory), it's a data segment, you can't execute code, it's readable
-and writable. That's it. Phew again !!!!
+and writable. That's it. Phew again :sweat_smile:!!!!
 
 +-- Timestamp: 2020-01-19-16:25 ---+
 
@@ -684,7 +684,7 @@ least for now, it will only print a message informing you should
 reboot and enter an infinite loop. That's it. It never returns/resumes
 from an exception.
 
-Phew !!!!
+Phew :sweat_smile:!!!!
 
 In order to make kalimera kernel install the IDT entries discussed so
 far, file exceptions0to31.s defines a "function" called
