@@ -1,3 +1,10 @@
+/*	
+ * File: dev.terminal.s
+ * This code is part of the kalimera system project.
+ * Author: Rossano Pablo Pinto (rossano at gmail dot com)
+ * Date: Fri Feb  7 09:58:07 -03 2020
+ */
+
 .global init_terminal
 .global deal_with_key	
 
@@ -5,15 +12,24 @@ init_terminal:
 	/***   VRAM  ***/
 	movl $0xb8000, VRAM
 
-set_initial_cursor_position:
-	movl $(80 * 15 - 2), cursor_offset
-	movl $(160 * 15 - 4), char_offset
+.set_initial_cursor_position:
+	movl $(80 * 15), cursor_offset
+	movl $(160 * 15), char_offset
+	call move_cursor
+	ret
 	
 deal_with_key:
+
 	pushl   %ebp
         movl    %esp, %ebp
 	movl    8(%esp), %eax
 
+	/** DISCARD FIRST GARBAGE KEYBOARD KEY PRESS **/
+	movl enabled, %ebx
+	cmpl $0, %ebx
+	je .out
+	
+	
 	/**** WHERE TO PRINT ****/
 	mov	VRAM, %edi
 
@@ -54,14 +70,17 @@ deal_with_key:
 	movb	(%esi, %ebx, 1), %cl
 
 	/**** PRINT CHAR ON THE SCREEN ****/
-	movl    (char_offset), %ebx
-	movb	%cl, %es:(%edi, %ebx, 1)
-	addl    $2, char_offset
+	
+	movl    char_offset, %ebx        #
+	movb    $0x07, %ch               # GRAY ON BLACK
+	movw	%cx, %es:(%edi, %ebx, 1) #
+	addl    $2, char_offset          #
 	
 	/**** MOVE CURSOR ON THE SCREEN ****/
 	addl    $1, cursor_offset
 	call    move_cursor
 
+	
 	jmp 	.out
 
 /**** ACTIONS *****/
@@ -153,7 +172,7 @@ deal_with_key:
 
 
 .out:
-	
+	movl $1, enabled
 	pop %ebp
 	ret
 	
@@ -212,4 +231,5 @@ cursor_offset:		.int 0
 
 char_line_size:		.int 160
 char_offset:		.int 0
-	
+
+enabled:	.int 0

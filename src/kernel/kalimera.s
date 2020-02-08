@@ -172,7 +172,9 @@ install_device_drivers:
 	call init_pic_device_driver      /* dev.pic.s */
 	call init_keyboard_device_driver /* dev.keyboard.s */
 	call init_terminal               /* dev.terminal.s */
-	
+	call configure_pit               /* dev.pit.s */
+        call init_clock_device_driver    /* dev.clock.s */
+
 print_a_message_to_screen:
         pushl $0x00   # BG COLOR : BLACK
         pushl $0x07   # FG COLOR : LIGHT GREY
@@ -180,19 +182,19 @@ print_a_message_to_screen:
         pushl $48     # COLUMN
         pushl $23     # LINE
         call print
-
+	addl $20, %esp
 	
         /****
 	 **** VERY IMPORTANT:
-	 **** MASK ALL INTERRUPTS BUT keyboard
+	 **** MASK ALL INTERRUPTS BUT keyboard, timer
 	 **** WE ARE ABOUT TO ENABLE INTERRUPTS. IF SOME DEVICE THAT
 	 **** HAS NOT IDT ENTRY RAISES AN INTERRUPT, YOU CRASH YOUR MACHINE
 	*/
 mask_some_interrupts:	
-	/**** MASK ALL INTERRUPTS BUT keyboard ****/
-        movb   $0b11111101, %al
+	/**** MASK ALL INTERRUPTS BUT keyboard, timer ****/
+        movb   $0b11111100, %al
 	       #  ||||||||
-	       #  |||||||+-> IRQ0	
+	       #  |||||||+-> IRQ0 - OUR TIMER (PIT)	
 	       #  ||||||+--> IRQ1 - OUR KEYBOARD (ONLY INTERRUPT ENABLED)
 	       #  |||||+---> IRQ2 - ROUTER FOR IRQs 8 to 15
                #  ||||+----> IRQ3
@@ -206,6 +208,7 @@ mask_some_interrupts:
 	/**** ENABLE INTERRUPTS - FINALLY !!!! UHUUU !!! ****/
 enable_interrupts:	
 	sti # NOW POTENTIALLY BAD THINGS CAN HAPPEN 
+
 
 	
 /* TEST SOME EXCEPTIONS */	
@@ -232,7 +235,7 @@ enable_interrupts:
 	
 /* LET'S CELEBRATE WITH AN "ENTERPRISE!!!!" ANIMATION */
 jmp print_enterprise
-	
+
 #----------------------------------------------------------------------
 msgkernel:
         .asciz "KALIMERA KERNEL >> 32bits Protected Mode <<"
@@ -316,7 +319,7 @@ animate:
 	jmp .put_space	
 .end_of_put_space:
 /*-------------------*/	
-	
+
 	jmp animate
 
 

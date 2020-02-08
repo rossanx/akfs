@@ -13,10 +13,10 @@ Please, read the file [docs/journal.md](docs/journal.md).
 ```mermaid
 pie title Source Code Distribution so far (lines)
     "C" :  19
-    "x86-Assembly" :  5732
+    "x86-Assembly" :  6086
     "Shel Script" :  262
-    "Makefile/linker script" :  838
-    "Documentation" :  2562
+    "Makefile/linker script" :  862
+    "Documentation" :  2752
 ```
 
 Please, read the file [docs/journal.md](docs/journal.md).
@@ -35,6 +35,7 @@ In order to run the kalimera kernel with a pretty cool animation:
 
 Here are some milestones marked with tags:
 
+      v0.07-kernel-device-driver-pit-clock
       v0.06-kernel-keyboard-terminal
       v0.05-kernel-device-driver-pic-keyboard
       v0.04-kernel-IDT-32-exceptions

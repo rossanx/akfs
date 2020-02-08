@@ -14,7 +14,9 @@ ${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/kalimera.map: \
 	${OUTPUTDIR}/exceptions0to31.o \
 	${OUTPUTDIR}/dev.pic.o \
 	${OUTPUTDIR}/dev.keyboard.o \
-	${OUTPUTDIR}/dev.terminal.o
+	${OUTPUTDIR}/dev.terminal.o \
+	${OUTPUTDIR}/dev.pit.o \
+	${OUTPUTDIR}/dev.clock.o
 
 	ld -x -s -m elf_i386 -Tlinker-script \
 		${OUTPUTDIR}/kalimera.o \
@@ -23,6 +25,8 @@ ${OUTPUTDIR}/kalimera.bin ${OUTPUTDIR}/kalimera.map: \
 		${OUTPUTDIR}/dev.pic.o \
 		${OUTPUTDIR}/dev.keyboard.o \
 		${OUTPUTDIR}/dev.terminal.o \
+	        ${OUTPUTDIR}/dev.pit.o \
+		${OUTPUTDIR}/dev.clock.o \
 		-o ${OUTPUTDIR}/kalimera.bin -Map ${OUTPUTDIR}/kalimera.map
 
 ${OUTPUTDIR}/kalimera.o: kalimera.s
@@ -43,6 +47,12 @@ ${OUTPUTDIR}/dev.keyboard.o: dev.keyboard.s
 ${OUTPUTDIR}/dev.terminal.o: dev.terminal.s
 	as -32 --gstabs+ -o ${OUTPUTDIR}/dev.terminal.o dev.terminal.s
 
+${OUTPUTDIR}/dev.pit.o: dev.pit.s
+	as -32 --gstabs+ -o ${OUTPUTDIR}/dev.pit.o dev.pit.s
+
+${OUTPUTDIR}/dev.clock.o: dev.clock.s
+	as -32 --gstabs+ -o ${OUTPUTDIR}/dev.clock.o dev.clock.s
+
 clean:
 	rm -f ${OUTPUTDIR}/kalimera.o
 	rm -f ${OUTPUTDIR}/kalimera.bin
@@ -53,6 +63,8 @@ clean:
 	rm -f ${OUTPUTDIR}/utils.o
 	rm -f ${OUTPUTDIR}/dev.keyboard.o
 	rm -f ${OUTPUTDIR}/dev.terminal.o
+	rm -f ${OUTPUTDIR}/dev.pit.o
+	rm -f ${OUTPUTDIR}/dev.clock.o
 	(cd ../bootloader; make clean; cd -)
 	@echo ">>>+++++ Showing remaining files at ${OUTPUTDIR}:"
 	ls ${OUTPUTDIR}

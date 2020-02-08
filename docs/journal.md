@@ -6,8 +6,8 @@ related to the choices we are going to make along the development.
 
 =======================================================================
 
-1 - Getting the system to execute our code as the first thing after
-the firmware.
+**1 - Getting the system to execute our code as the first thing after
+the firmware.**
 
 We have chosen the x86/i386 (a.k.a. PC) to be the target architecture
 of the kernel. x86 systems start by executing the firmware located at the
@@ -70,7 +70,7 @@ kernel is loaded into memory we don't need the disk anymore.
 
 =======================================================================
 
-2 - The boot loader (src/bootloader/bootloader.s)
+**2 - The boot loader (src/bootloader/bootloader.s)**
 
 We could use LILO, GRUB or any other bootloader to boot our kernel. So
 why are we having the trouble to create our own? Well, why are we
@@ -170,7 +170,7 @@ Next, follow these steps to make the bootloader run fakekernel.s:
 
 =======================================================================
 
-3 - Kernel main file (src/kernel/kalimera.s)
+**3 - Kernel main file (src/kernel/kalimera.s)**
 
 +-- Timestamp: 2020-01-07-13:20 ---+
 
@@ -307,7 +307,7 @@ As you could see it's not as easy as we present it to students when
 teaching Operating Systems. Well, you use any abstraction that suits
 the audience.
 
-3.1 - GDT
+**3.1 - GDT**
 
 Now let's cut to the chase. Let's code this.
 
@@ -476,7 +476,7 @@ Yeah! This is going to be fun.
 
 +-- Timestamp: Wed Jan 22 22:36:02 -03 2020 --+
 
-3.2 - IDT
+**3.2 - IDT**
 
 Ok. Let's touch the IDT subject. What is it for? CPUs handle
 stochastic (random) events, system service calls, and "internal
@@ -601,7 +601,7 @@ you'll always see the SELECTOR and TYPE/ATTRIBUTES with the same values:
 		    +--------> 1 FOR USED INTERRUPT, 0 OTHERWISE
 </pre>
 
-3.2.1 - EXCEPTIONS
+**3.2.1 - EXCEPTIONS**
 
 Ok. Let's code the IDT entries. Let's start with the EXCEPTIONS.
 
@@ -730,17 +730,17 @@ Stay tuned.
 
 +-- Timestamp: Fri Jan 24 14:11:45 -03 2020 --+
 
-3.2.2 - DEVICE DRIVERS AND HARDWARE INTERRUPTS
+**3.2.2 - DEVICE DRIVERS AND HARDWARE INTERRUPTS**
 
 Ok, I'm back...
 
-DEVIDE DRIVER FILE NAMING CONVENTION
+**DEVIDE DRIVER FILE NAMING CONVENTION**
 
 In order to bring some file naming structure, I'll name every device
 driver file with the prefix "dev.". So, for example, a file for a
 keyboard device driver would be named dev.keyboard.s.
 
-PIC "DEVICE DRIVER"
+**PIC "DEVICE DRIVER"**
 
 I consider PICs routers of interrupts, they are not supposed to
 generate any interrupt by themselves, and you don't register an IDT
@@ -754,7 +754,7 @@ both together.
       TODO: PUT SOME DIAGRAM EXPLAINNING THE PHYSICAL/LOGICAL
             CONNECTION BETWEEN PIC1 AND PIC2
 
-KEYBOARD DEVICE DRIVER
+**KEYBOARD DEVICE DRIVER**
 
 Normally, I would start developing a clock device driver, followed by
 a serial device driver (which is nice for debugging), and then a
@@ -855,14 +855,16 @@ an editor:
 
 +-- Timestamp: Wed Feb  5 23:10:51 -03 2020 --+
 
+**MASKING INTERRUPTS**
+
 Ok. In order to put our keyboard device driver to work, we need to
 enable interrupts. :open_mouth:. If we just do that we will cause an
 exception!!! It happens because several devices present in your
 motherboard generates interrupts. If an interrupt is raised and we
 don't have a proper IDT entry for it, some garbage code will
 execute... It will end up raising an exception... So, we need to mask
-all the interrupts we don't wnat to deal with at the moment. In order to do that
-you execute the following code presentat file kalimera.s:
+all the interrupts we don't wnat to deal with at the moment. In order
+to do that you execute the following code presentat file kalimera.s:
 
 <pre>
       mask_some_interrupts:	
@@ -888,6 +890,8 @@ interrupt 1. After this we can FINALLY enable interrupts with
 
 +-- Timestamp: Fri Feb  7 10:38:22 -03 2020 --+
 
+**TERMINAL "DEVICE DRIVER"**
+
 I wasn't happy with the intermixed code to deal with key press and
 printing a corresponding char on the screen. So I stripped out all
 the printing on the screen thing and keyboard map from
@@ -903,13 +907,100 @@ It also provides "hardware cursor" now. It's much better than the
 
 I added actions for UP, DOWN, LEFT, and WRITE keys.
 
+**PIT "DEVICE DRIVER"**
+
+Exciting moment. The clock is a key element to allow
+multitasking. With a clock interrupt you can control the passage of
+time, and with that, create a scheduler that gives an amount of time
+to each task. In other words, you define a timeslice/quantum for each
+task, and at every clock interrupt you calculate the amount of time
+that has passed. If enough time has passed, it's time to context
+switch. Humm, I'm getting ahead of myself, let's create a simple clock
+device driver first.
+
+In order to synchronize the operations of a machine, a signal (pulse)
+is generated at a certain frequency. This pulse is "physically"
+gererated (LOL, it has to be physical - are you in another
+non-physical world?) by a crystal oscillator. This crystal oscillator
+uses a phenomenon called mechanical resonance to generate an
+electrical signal with a very precise frequency. The thickness of the
+crystal is what determines the frequency of the generated signal.
+
+This crystal oscillator presents itself as a chip called PIT
+(Programmable Interval Timer). The commonly used PIT is the chip
+8253/8254. Basically, this chip offers the crystal oscillator, and 3
+programmable counters (we will program only one of them). 8253/8254
+crystal oscillator runs at 1.193182 MHz, i.e., it resonates 1.193.182
+times per second (it generates a signal at 1.193.182 times per
+second).
+
+So, the basic idea is to create a counter that is decremented at
+1.193.182 times per second. When the counter zeros out, an interrupt
+is generated (IRQ0), and the counter is reset to whatever value you
+programmed it to be reset to. As it always get the same time to zero
+out the counter, you know the amount of time that has passed.
+
+Ok, now let's se how to code it. 
+
+      SEE FILE src/kernel/dev.pit.s
+
+I'll use the same terminology used in the Linux kernel to determine
+the frequency of generated clock interrupts. You define what is called
+an HZ. So, if you define an HZ of 100, your CPU is going to be
+interrupted 100 times per second. It gives you a resolution of 1/100,
+which is 10ms. If you define HZ to be 1000, you end up with a
+resolution os 1ms (1/1000). The PIT chip can be programmed writing to
+port 0x40:
+
+<pre>
+     .set    TICRATE, 1193182
+     .set    HZ, 100    # About 10ms resolution
+     configure_pit:
+             pusha
+
+             /** SET MODE TO BINARY **/
+             mov     $0x34, %al
+             outb    %al, $0x40
+
+             movl    $0, %edx        # CLEAR DIVIDEND (it crashes otherwise)
+             movl    $TICRATE, %eax  # DIVIDEND
+             movl    $HZ, %ecx       # DIVISOR
+             div     %ecx            # RESULT IN %eax (and %edx when 64 bits)
+        
+             outb    %al, $0x40    # LSB
+             shr     $8, %ax
+             outb    %al, $0x40    # MSB
+        
+             popa
+             ret
+</pre>        
+
+We have just configured the hardware device that will generate
+interrupts using IRQ0. Now we need to create an IDT to deal with
+IRQ0. That's the subject of the next section. YeY !!!!
+
+**CLOCK DEVICE DRIVER**
+
+WoW! You are about to program a really important piece of our
+kernel. I hope you are as excited as I am. This is
+amazing. dev.clock.s implements the clock device driver, but it's
+really simple now. It just installs an IDT for the IRQ0. The clock
+interrupt handler updates a variable to keep track of the passage of
+time, then it prints a random char at the top left corner of the
+screen. Later, we will add all sorts of functionalities related to the
+passage of time. For now, just enjoy the beautiful random characters
+that show up at the aforementioned position.
+
+      SEE FILE src/kernel/dev.clock.s
+
+
 AND WE ARE NOT DONE YET. MORE ARE TO COME...BE PATIENT... BUT FOR NOW
 YOU CAN READ THE APPENDICES.
 
 
 =======================================================================
 
-Appendix A. Exploring qemu memory
+**Appendix A. Exploring qemu memory**
 
 Qemu offers a very handy monitor where you can type a set of commands.
 You activate this monitor passing the parameter "-monitor stdio" when
@@ -952,7 +1043,7 @@ The modifiers ("/fmt") are:
 
 =======================================================================
 
-Appendix B. Exploring qemu REGISTERS !!!!
+**Appendix B. Exploring qemu REGISTERS !!!!**
 
 This is amazing. You should definitely explore this.
 Type: (qemu) info registers
@@ -1032,7 +1123,7 @@ So cool! I can't express my joy enough in being able to see this.
 
 =======================================================================
 
-Appendix C. Bootloader in memory
+**Appendix C. Bootloader in memory**
 
 This is the memory occupied by our bootloader. This was obtained typing
 this at the (qemu) prompt: (qemu) x /256h 0x7c00
@@ -1075,7 +1166,7 @@ Observe the value 0xaa55 at the end.
 
 =======================================================================
 
-Appendix D. fakekernel in memory (now the address is 0x8000, instead of 0x7F00)
+**Appendix D. fakekernel in memory (now the address is 0x8000, instead of 0x7F00)**
 
 This is the memory occupied by our fakekernel. This was obtained typing
 this at the (qemu) prompt: (qemu) x /48h 0x7F00
@@ -1091,7 +1182,7 @@ this at the (qemu) prompt: (qemu) x /48h 0x7F00
 
 =======================================================================
 
-Appendix E. Both bootloader and fakekernel in memory
+**Appendix E. Both bootloader and fakekernel in memory**
 
 This is the memory occupied by our fakekernel. This was obtained typing
 this at the (qemu) prompt: (qemu) x /432h 0x7C00
@@ -1153,8 +1244,8 @@ this at the (qemu) prompt: (qemu) x /432h 0x7C00
 
 =======================================================================
 
-Appendix F. Source Code - Number of lines prediction based on another
-            kernel I developed
+**Appendix F. Source Code - Number of lines prediction based on another
+            kernel I developed**
 
 
 ```mermaid

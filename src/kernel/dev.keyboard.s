@@ -66,7 +66,7 @@ install_keyboard_int_handler:
 	pusha
 	# IRQ 1 - KEYBOARD
 	/**** INFORM KEYBOARD INTERRUPT HANDLER ****/
-	movl	$readkeyboard, %eax    #int_handler, %eax	
+	movl	$readkeyboard, %eax    
 	/**** WRITE IDT ENTRY 33 ****/
 	movw	%ax, (33*8)
 	movw	$0x08, (33*8+2)
@@ -97,22 +97,24 @@ readkeyboard:
 	# +----------------> Parity error (1=error, 0=no error)
 
 
+	xorl %eax, %eax
 	/**** READ KEY PRESSED ****/
 	inb	$0x60, %al
 
 	/**** IGNORE KEY RELEASE FOR NOW ****/
 	cmp	$0, %al
 	jng	.out
-
-	push %eax
-	call deal_with_key
-	add $4, %esp
 	
+	push %eax
+	call deal_with_key   /* dev.terminal.s */
+	add $4, %esp
+
 
 .out:
 	
 	/**** RESTORE REGISTERS ****/
 	popa
+
 
 	/**** THIS IS VERY IMPORTANT. WHEN FINISHED SERVING AN
 	 **** INTERRUPT, YOU MUST INFORM PICs ABOUT IT (CLEAR INTERRUPT)
@@ -122,6 +124,7 @@ readkeyboard:
 	movb	$0x20, %al      # TEL PIC1 THAT WE FINISHED SERVICING Int
 	outb	%al, $0x20      #
 
+	
 	/**** RETURN FROM INTERRUPT ****/
 	iret
 
